@@ -1,0 +1,6 @@
+/target
+/artifacts
+/sled
+/.direnv
+/.envrc
+/result

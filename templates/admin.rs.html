@@ -1,0 +1,18 @@
+@use crate::db::Contact;
+@use activitystreams::iri_string::types::IriString;
+
+@(contact: &Contact, base: &IriString)
+
+<div class="admin">
+  <div class="left">
+    <figure class="avatar">
+      <img loading="lazy" src="@contact.avatar" alt="@contact.display_name's avatar">
+    </figure>
+  </div>
+  <div class="right">
+    <p class="display-name"><a href="@contact.url">@contact.display_name</a></p>
+    <p class="username">
+      @@@contact.username@if let Some(authority) = base.authority_str() {@@@authority}
+    </p>
+  </div>
+</div>

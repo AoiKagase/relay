@@ -1,0 +1,20 @@
+version: '3.3'
+
+services:
+  relay:
+    image: asonix/relay:0.3.85
+    ports:
+      - "8079:8079"
+    restart: always
+    environment:
+      - HOSTNAME=relay.my.tld
+      - ADDR=0.0.0.0
+      - PORT=8080
+      - DEBUG=false
+      - RESTRICTED_MODE=false
+      - VALIDATE_SIGNATURES=true
+      - HTTPS=true
+      - SLED_PATH=/mnt/sled/db-0.34
+      - PRETTY_LOG=false
+      - PUBLISH_BLOCKS=true
+      - API_TOKEN=somepasswordishtoken
