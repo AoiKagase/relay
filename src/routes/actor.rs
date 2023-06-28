@@ -36,7 +36,7 @@ pub(crate) async fn route(
     application
         .set_id(config.generate_url(UrlKind::Actor))
         .set_summary("AodeRelay bot")
-        .set_name("AodeRelay")
+        .set_name("Fediverse Relay")
         .set_url(config.generate_url(UrlKind::Actor))
         .set_many_contexts(vec![context(), security()])
         .set_preferred_username("relay")

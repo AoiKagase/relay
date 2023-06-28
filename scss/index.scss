@@ -21,8 +21,8 @@ body * {
 
 header {
     .header-text {
-        max-width: 700px;
-        margin: auto;
+        max-width: 900px;
+	    margin: 0 32px auto;
         padding: 24px 0;
     }
 
@@ -74,7 +74,7 @@ article {
     }
 
     li {
-        padding-top: 36px;
+//      padding-top: 36px;
     }
 
     .padded {
@@ -100,7 +100,9 @@ article {
         }
     }
 }
-
+article .right {
+	margin: 32px 32px 32px 0;
+}
 pre {
     border: 1px solid #e5e5e5;
     border-radius: 3px;
@@ -137,7 +139,7 @@ a {
 footer {
     background-color: #333;
     color: #f5f5f5;
-    position: absolute;
+//  position: absolute;
     padding: 16px 8px;
     bottom: 0;
     left: 0;
@@ -196,7 +198,7 @@ footer {
 }
 
 .admin {
-    margin-top: 32px;
+    margin-top: 2px;
     display: flex;
     align-items: center;
     background-color: #fff;
@@ -231,7 +233,7 @@ footer {
     }
 }
 
-@media(max-width: 700px) {
+@media(max-width: 900px) {
     header .header-text {
         padding: 24px;
     }

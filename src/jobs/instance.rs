@@ -78,8 +78,8 @@ impl QueryInstance {
 
         // Attempt all endpoint.
         let instance_futures = [
-            Self::get_instance(InstanceApiType::Mastodon, &state, scheme, authority),
             Self::get_instance(InstanceApiType::Misskey, &state, scheme, authority),
+            Self::get_instance(InstanceApiType::Mastodon, &state, scheme, authority),
         ];
 
         let mut instance_result: Option<Instance> = None;

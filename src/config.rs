@@ -371,7 +371,7 @@ impl Config {
     }
 
     pub(crate) fn software_name() -> &'static str {
-        "AodeRelay"
+        "Fediverse Relay"
     }
 
     pub(crate) fn software_version() -> String {
