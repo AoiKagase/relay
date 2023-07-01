@@ -52,7 +52,8 @@ article {
     padding-bottom: 32px;
 
     section {
-      border-bottom: 1px solid #e5e5e5;
+      border-bottom: 0px solid #e5e5e5;
+	  font-size: 9pt;
 
       > h4:first-child,
       > p:first-child {
@@ -64,7 +65,8 @@ article {
     }
 
     h3 {
-        padding: 24px;
+        padding: 12px;
+        font-size: 12pt;
         margin: 0px;
         border-bottom: 1px solid #e5e5e5;
     }
@@ -78,7 +80,7 @@ article {
     }
 
     .padded {
-        padding: 0 24px;
+        padding: 0px 12px 0px 0px;
     }
 
     .local-explainer,
@@ -101,7 +103,7 @@ article {
     }
 }
 article .right {
-	margin: 32px 32px 32px 0;
+	margin: 12px 0px 0px 0px;
 }
 pre {
     border: 1px solid #e5e5e5;
@@ -154,7 +156,7 @@ footer {
 .instance,
 .info {
     h4 {
-        font-size: 20px;
+        font-size: 9pt;
         margin: 0;
     }
 
@@ -198,11 +200,12 @@ footer {
 }
 
 .admin {
-    margin-top: 2px;
+    margin-top: 0px;
     display: flex;
     align-items: center;
     background-color: #fff;
-    border: 1px solid #e5e5e5;
+    border: 0px solid #e5e5e5;
+    border-bottom: 1px solid #e5e5e5;
     border-radius: 3px;
     box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
 
@@ -221,12 +224,12 @@ footer {
 }
 
 .avatar {
-    width: 80px;
-    height: 80px;
-
+    width: 40px;
+    height: 40px;
+    margin: 12px;
     img {
         width: 100%;
-        border-radius: 40px;
+        border-radius: 20px;
         border: 1px solid #333;
         background-color: #f5f5f5;
         box-shadow: 0px 0px 3px rgba(0, 0, 0, 0.1);
@@ -247,24 +250,24 @@ footer {
 
 @media(max-width: 500px) {
     .avatar {
-        width: 60px;
-        height: 60px;
+        width: 40px;
+        height: 40px;
         margin: 16px 24px;
 
         img {
-            border-radius: 30px;
+            border-radius: 20px;
         }
     }
 }
 
 @media(max-width: 400px) {
     .avatar {
-        width: 50px;
-        height: 50px;
+        width: 40px;
+        height: 40px;
         margin: 16px 20px;
 
         img {
-            border-radius: 25px;
+            border-radius: 20px;
         }
     }
 }
