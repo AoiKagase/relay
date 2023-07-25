@@ -1,7 +1,7 @@
 [package]
 name = "ap-relay"
 description = "A simple activitypub relay"
-version = "0.3.85"
+version = "0.3.86"
 authors = ["asonix <asonix@asonix.dog>"]
 license = "AGPL-3.0"
 readme = "README.md"
@@ -29,11 +29,11 @@ actix-web = { version = "4.0.1", default-features = false, features = [
   "compress-gzip",
 ] }
 actix-webfinger = "0.4.0"
-activitystreams = "0.7.0-alpha.21"
+activitystreams = "0.7.0-alpha.25"
 activitystreams-ext = "0.1.0-alpha.3"
 ammonia = "3.1.0"
 awc = { version = "3.0.0", default-features = false, features = ["rustls"] }
-bcrypt = "0.14"
+bcrypt = "0.15"
 base64 = "0.21"
 clap = { version = "4.0.0", features = ["derive"] }
 config = "0.13.0"
@@ -41,7 +41,7 @@ console-subscriber = { version = "0.1", optional = true }
 dashmap = "5.1.0"
 dotenv = "0.15.0"
 futures-util = "0.3.17"
-lru = "0.10.0"
+lru = "0.11.0"
 metrics = "0.21.0"
 metrics-exporter-prometheus = { version = "0.12.0", default-features = false, features = [
   "http-listener",
@@ -98,7 +98,7 @@ version = "0.7.5"
 [build-dependencies]
 anyhow = "1.0"
 dotenv = "0.15.0"
-ructe = { version = "0.16.0", features = ["sass", "mime03"] }
+ructe = { version = "0.17.0", features = ["sass", "mime03"] }
 toml = "0.7.0"
 
 [profile.dev.package.rsa]
