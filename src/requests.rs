@@ -1,6 +1,7 @@
 use crate::{
     data::LastOnline,
     error::{Error, ErrorKind},
+    spawner::Spawner,
 };
 use activitystreams::iri_string::types::IriString;
 use actix_web::http::header::Date;
@@ -38,7 +39,7 @@ impl std::fmt::Debug for Breakers {
 }
 
 impl Breakers {
-    fn should_try(&self, url: &IriString) -> bool {
+    pub(crate) fn should_try(&self, url: &IriString) -> bool {
         if let Some(authority) = url.authority_str() {
             if let Some(breaker) = self.inner.get(authority) {
                 breaker.should_try()
@@ -145,7 +146,7 @@ pub(crate) struct Requests {
     key_id: String,
     user_agent: String,
     private_key: RsaPrivateKey,
-    config: Config,
+    config: Config<Spawner>,
     breakers: Breakers,
     last_online: Arc<LastOnline>,
 }
@@ -184,6 +185,7 @@ pub(crate) fn build_client(user_agent: &str, pool_size: usize, timeout_seconds: 
 }
 
 impl Requests {
+    #[allow(clippy::too_many_arguments)]
     pub(crate) fn new(
         key_id: String,
         private_key: RsaPrivateKey,
@@ -192,6 +194,7 @@ impl Requests {
         last_online: Arc<LastOnline>,
         pool_size: usize,
         timeout_seconds: u64,
+        spawner: Spawner,
     ) -> Self {
         Requests {
             pool_size,
@@ -199,10 +202,15 @@ impl Requests {
             key_id,
             user_agent,
             private_key,
-            config: Config::default().mastodon_compat(),
+            config: Config::new().mastodon_compat().spawner(spawner),
             breakers,
             last_online,
         }
+    }
+
+    pub(crate) fn spawner(mut self, spawner: Spawner) -> Self {
+        self.config = self.config.spawner(spawner);
+        self
     }
 
     pub(crate) fn reset_breaker(&self, iri: &IriString) {
@@ -227,7 +235,7 @@ impl Requests {
             if let Ok(bytes) = res.body().await {
                 if let Ok(s) = String::from_utf8(bytes.as_ref().to_vec()) {
                     if !s.is_empty() {
-                        tracing::warn!("Response from {parsed_url}, {s}");
+                        tracing::debug!("Response from {parsed_url}, {s}");
                     }
                 }
             }

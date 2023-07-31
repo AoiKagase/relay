@@ -4,6 +4,7 @@ use crate::{
     db::Db,
     error::Error,
     requests::{Breakers, Requests},
+    spawner::Spawner,
 };
 use activitystreams::iri_string::types::IriString;
 use actix_web::web;
@@ -40,7 +41,7 @@ impl State {
         self.node_cache.clone()
     }
 
-    pub(crate) fn requests(&self, config: &Config) -> Requests {
+    pub(crate) fn requests(&self, config: &Config, spawner: Spawner) -> Requests {
         Requests::new(
             config.generate_url(UrlKind::MainKey).to_string(),
             self.private_key.clone(),
@@ -49,6 +50,7 @@ impl State {
             self.last_online.clone(),
             config.client_pool_size(),
             config.client_timeout(),
+            spawner,
         )
     }
 
@@ -89,6 +91,10 @@ impl State {
 
     pub(crate) fn cache(&self, object_id: IriString, actor_id: IriString) {
         self.object_cache.write().unwrap().put(object_id, actor_id);
+    }
+
+    pub(crate) fn is_connected(&self, iri: &IriString) -> bool {
+        self.breakers.should_try(iri)
     }
 
     #[tracing::instrument(level = "debug", name = "Building state", skip_all)]
