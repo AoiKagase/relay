@@ -33,17 +33,17 @@
 		<h4 class="padded">
 			<a href="@base">@instance.title</a>
 		</h4>
-		<p class="padded" style="font-size:8pt;">
+		<p class="padded" style="font-size:7pt;">
 			@if let Some(software_b) = software {
 			Running @software_b, version @instance.version.
 			}
 			@if instance.reg {
-			<br><span style="color:blue;font-weight:bold;">登録受付中 (Registration is open.)</span>
+			<br><span style="color:rgba(80, 80, 255);font-weight:bold;">開放中 (Registration is open.)</span>
 			@if instance.requires_approval {
 			<br>Accounts must be approved by an admin.
 			}
 			} else {
-			<br><span style="color:red;font-weight:bold;">登録停止中 (Registration is closed.)</span>
+			<br><span style="color:rgba(255,80,80);font-weight:bold;">承認制 (Registration is closed.)</span>
 			}
 		</p>
 	</div>
