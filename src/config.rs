@@ -351,6 +351,8 @@ impl Config {
         Ok(Some((certs, key)))
     }
 
+    #[allow(dead_code)]
+    /// Returns the footer blurb of this [`Config`].
     pub(crate) fn footer_blurb(&self) -> Option<crate::templates::Html<String>> {
         if let Some(blurb) = &self.footer_blurb {
             if !blurb.is_empty() {
@@ -504,6 +506,7 @@ impl Config {
         })
     }
 
+    #[allow(dead_code)]
     pub(crate) fn source_code(&self) -> &IriString {
         &self.source_repo
     }
