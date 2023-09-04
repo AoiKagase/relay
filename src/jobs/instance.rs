@@ -94,14 +94,17 @@ impl QueryInstance {
                     break;
                 }
                 Err(e) if e.is_breaker() => {
-                    tracing::debug!("Not retrying due to failed breaker");
+//                  tracing::debug!("Not retrying due to failed breaker");
+                    tracing::error!("{authority}: Not retrying due to failed breaker");
                     return Ok(());
                 }
                 Err(e) if e.is_not_found() => {
-                    tracing::debug!("Server doesn't implement instance endpoint");
+//                  tracing::debug!("Server doesn't implement instance endpoint");
+                    tracing::error!("{authority}: Server doesn't implement instance endpoint");
                 }
                 Err(e) if e.is_malformed_json() => {
-                    tracing::debug!("Server doesn't returned proper json");
+//                  tracing::debug!("Server doesn't returned proper json");
+                    tracing::error!("{authority}: Server doesn't returned proper json");
                 }
                 Err(e) => return Err(e),
             }
@@ -110,7 +113,8 @@ impl QueryInstance {
         let instance = match instance_result {
             Some(instance) => instance,
             None => {
-                tracing::debug!("Server doesn't implement all instance endpoint");
+//              tracing::debug!("Server doesn't implement all instance endpoint");
+                tracing::error!("{authority}: Server doesn't implement all instance endpoint");
                 return Ok(());
             }
         };
