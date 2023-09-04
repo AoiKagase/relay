@@ -1,4 +1,3 @@
-@extern crate chrono;
 @use crate::{db::{Contact, Instance}};
 @use activitystreams::iri_string::types::IriString;
 
@@ -51,11 +50,6 @@
 			} else {
 			<br><span style="color:rgba(255,80,80);font-weight:bold;">承認制 (Registration is closed.)</span>
 			}
-			@{
-				let updated_time: DateTime<Utc> = instance.updated.into();
-				let updated_time = format_utc_to_string(&updated_time);
-				<br>updated_time.format("%Y.%m.%d %T")
-			@}
 		</p>
 	</div>
 	</div>
