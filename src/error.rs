@@ -114,6 +114,9 @@ pub(crate) enum ErrorKind {
     #[error("Couldn't sign digest")]
     Signature(#[from] rsa::signature::Error),
 
+    #[error("Couldn't prepare TLS private key")]
+    PrepareKey(#[from] rustls::sign::SignError),
+
     #[error("Couldn't verify signature")]
     VerifySignature,
 

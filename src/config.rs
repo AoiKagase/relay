@@ -12,9 +12,8 @@ use activitystreams::{
 };
 use config::Environment;
 use http_signature_normalization_actix::{digest::ring::Sha256, prelude::VerifyDigest};
-use rustls::{Certificate, PrivateKey};
+use rustls::{sign::CertifiedKey, Certificate, PrivateKey};
 use std::{
-    io::BufReader,
     net::{IpAddr, SocketAddr},
     path::PathBuf,
 };
@@ -312,7 +311,7 @@ impl Config {
         Some((config.addr, config.port).into())
     }
 
-    pub(crate) fn open_keys(&self) -> Result<Option<(Vec<Certificate>, PrivateKey)>, Error> {
+    pub(crate) async fn open_keys(&self) -> Result<Option<CertifiedKey>, Error> {
         let tls = if let Some(tls) = &self.tls {
             tls
         } else {
@@ -320,35 +319,29 @@ impl Config {
             return Ok(None);
         };
 
-        let mut certs_reader = BufReader::new(std::fs::File::open(&tls.cert)?);
-        let certs = rustls_pemfile::certs(&mut certs_reader)?;
+        let certs_bytes = tokio::fs::read(&tls.cert).await?;
+        let certs = rustls_pemfile::certs(&mut certs_bytes.as_slice())
+            .map(|res| res.map(|c| Certificate(c.to_vec())))
+            .collect::<Result<Vec<_>, _>>()?;
 
         if certs.is_empty() {
             tracing::warn!("No certs read from certificate file");
             return Ok(None);
         }
 
-        let mut key_reader = BufReader::new(std::fs::File::open(&tls.key)?);
-        let key = rustls_pemfile::read_one(&mut key_reader)?;
-
-        let certs = certs.into_iter().map(Certificate).collect();
+        let key_bytes = tokio::fs::read(&tls.key).await?;
+        let key = rustls_pemfile::private_key(&mut key_bytes.as_slice())?;
 
         let key = if let Some(key) = key {
-            match key {
-                rustls_pemfile::Item::RSAKey(der) => PrivateKey(der),
-                rustls_pemfile::Item::PKCS8Key(der) => PrivateKey(der),
-                rustls_pemfile::Item::ECKey(der) => PrivateKey(der),
-                _ => {
-                    tracing::warn!("Unknown key format: {:?}", key);
-                    return Ok(None);
-                }
-            }
+            PrivateKey(Vec::from(key.secret_der()))
         } else {
             tracing::warn!("Failed to read private key");
             return Ok(None);
         };
 
-        Ok(Some((certs, key)))
+        let key = rustls::sign::any_supported_type(&key)?;
+
+        Ok(Some(CertifiedKey::new(certs, key)))
     }
 
     pub(crate) fn footer_blurb(&self) -> Option<crate::templates::Html<String>> {

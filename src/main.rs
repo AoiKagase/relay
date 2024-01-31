@@ -313,11 +313,15 @@ async fn server_main(
         telegram::start(admin_handle.to_owned(), db.clone(), token);
     }
 
-    let keys = config.open_keys()?;
+    let cert_resolver = config
+        .open_keys()
+        .await?
+        .map(rustls_channel_resolver::channel::<32>);
 
     let bind_address = config.bind_address();
     let sign_spawner2 = sign_spawner.clone();
     let verify_spawner2 = verify_spawner.clone();
+    let config2 = config.clone();
     let server = HttpServer::new(move || {
         let job_server =
             create_workers(state.clone(), actors.clone(), media.clone(), config.clone())
@@ -387,18 +391,36 @@ async fn server_main(
             )
     });
 
-    if let Some((certs, key)) = keys {
+    if let Some((cert_tx, cert_rx)) = cert_resolver {
+        let handle = tokio::spawn(async move {
+            let mut interval = tokio::time::interval(Duration::from_secs(30));
+            interval.tick().await;
+
+            loop {
+                interval.tick().await;
+
+                match config2.open_keys().await {
+                    Ok(Some(key)) => cert_tx.update(key),
+                    Ok(None) => tracing::warn!("Missing TLS keys"),
+                    Err(e) => tracing::error!("Failed to read TLS keys {e}"),
+                }
+            }
+        });
+
         tracing::warn!("Binding to {}:{} with TLS", bind_address.0, bind_address.1);
         let server_config = ServerConfig::builder()
             .with_safe_default_cipher_suites()
             .with_safe_default_kx_groups()
             .with_safe_default_protocol_versions()?
             .with_no_client_auth()
-            .with_single_cert(certs, key)?;
+            .with_cert_resolver(cert_rx);
         server
             .bind_rustls_021(bind_address, server_config)?
             .run()
             .await?;
+
+        handle.abort();
+        let _ = handle.await;
     } else {
         tracing::warn!("Binding to {}:{}", bind_address.0, bind_address.1);
         server.bind(bind_address)?.run().await?;
