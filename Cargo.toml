@@ -31,7 +31,7 @@ async-cpupool = "0.2.0"
 bcrypt = "0.15"
 base64 = "0.21"
 clap = { version = "4.0.0", features = ["derive"] }
-config = "0.13.0"
+config = { version = "0.14.0", default-features = false, features = ["toml", "json", "yaml"] }
 console-subscriber = { version = "0.2", optional = true }
 dashmap = "5.1.0"
 dotenv = "0.15.0"
