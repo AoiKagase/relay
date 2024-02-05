@@ -35,7 +35,7 @@ impl Deliver {
     }
 
     #[tracing::instrument(name = "Deliver", skip(state))]
-    async fn permform(self, state: JobState) -> Result<(), Error> {
+    async fn perform(self, state: JobState) -> Result<(), Error> {
         if let Err(e) = state
             .state
             .requests
@@ -58,13 +58,14 @@ impl Deliver {
 
 impl Job for Deliver {
     type State = JobState;
-    type Future = BoxFuture<'static, anyhow::Result<()>>;
+    type Error = Error;
+    type Future = BoxFuture<'static, Result<(), Self::Error>>;
 
     const NAME: &'static str = "relay::jobs::Deliver";
     const QUEUE: &'static str = "deliver";
     const BACKOFF: Backoff = Backoff::Exponential(8);
 
     fn run(self, state: Self::State) -> Self::Future {
-        Box::pin(async move { self.permform(state).await.map_err(Into::into) })
+        Box::pin(self.perform(state))
     }
 }

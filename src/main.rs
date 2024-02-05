@@ -56,8 +56,9 @@ use self::{
 fn init_subscriber(
     software_name: &'static str,
     opentelemetry_url: Option<&IriString>,
-) -> Result<(), anyhow::Error> {
+) -> color_eyre::Result<()> {
     LogTracer::init()?;
+    color_eyre::install()?;
 
     let targets: Targets = std::env::var("RUST_LOG")
         .unwrap_or_else(|_| "info".into())
@@ -140,7 +141,7 @@ fn build_client(
 }
 
 #[tokio::main]
-async fn main() -> Result<(), anyhow::Error> {
+async fn main() -> color_eyre::Result<()> {
     dotenv::dotenv().ok();
 
     let config = Config::build()?;
@@ -166,7 +167,7 @@ async fn main() -> Result<(), anyhow::Error> {
             .add_recorder(recorder)
             .add_recorder(collector.clone())
             .build();
-        metrics::set_global_recorder(recorder).map_err(|e| anyhow::anyhow!("{e}"))?;
+        metrics::set_global_recorder(recorder).map_err(|e| color_eyre::eyre::eyre!("{e}"))?;
     } else {
         collector.install()?;
     }
@@ -185,11 +186,11 @@ async fn main() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-fn client_main(config: Config, args: Args) -> JoinHandle<Result<(), anyhow::Error>> {
+fn client_main(config: Config, args: Args) -> JoinHandle<color_eyre::Result<()>> {
     tokio::spawn(do_client_main(config, args))
 }
 
-async fn do_client_main(config: Config, args: Args) -> Result<(), anyhow::Error> {
+async fn do_client_main(config: Config, args: Args) -> color_eyre::Result<()> {
     let client = build_client(
         &config.user_agent(),
         config.client_timeout(),
@@ -280,7 +281,7 @@ async fn server_main(
     media: MediaCache,
     collector: MemoryCollector,
     config: Config,
-) -> Result<(), anyhow::Error> {
+) -> color_eyre::Result<()> {
     let client = build_client(
         &config.user_agent(),
         config.client_timeout(),

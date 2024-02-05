@@ -21,7 +21,6 @@ default = []
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0"
 actix-web = { version = "4.4.0", default-features = false, features = ["compress-brotli", "compress-gzip", "rustls-0_22"] }
 actix-webfinger = { version = "0.5.0", default-features = false }
 activitystreams = "0.7.0-alpha.25"
@@ -31,6 +30,7 @@ async-cpupool = "0.2.0"
 bcrypt = "0.15"
 base64 = "0.21"
 clap = { version = "4.0.0", features = ["derive"] }
+color-eyre = "0.6.2"
 config = { version = "0.14.0", default-features = false, features = ["toml", "json", "yaml"] }
 console-subscriber = { version = "0.2", optional = true }
 dashmap = "5.1.0"
@@ -84,7 +84,7 @@ tokio = { version = "1", features = ["full", "tracing"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 
 [dependencies.background-jobs]
-version = "0.17.0"
+version = "0.18.0"
 default-features = false
 features = ["error-logging", "metrics", "tokio"]
 
@@ -102,7 +102,7 @@ features = ["middleware", "ring"]
 version = "0.7.9"
 
 [build-dependencies]
-anyhow = "1.0"
+color-eyre = "0.6.2"
 dotenv = "0.15.0"
 ructe = { version = "0.17.0", features = ["sass", "mime03"] }
 toml = "0.8.0"

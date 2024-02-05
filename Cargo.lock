@@ -389,12 +389,12 @@ dependencies = [
  "actix-web",
  "actix-webfinger",
  "ammonia",
- "anyhow",
  "async-cpupool",
  "background-jobs",
  "base64",
  "bcrypt",
  "clap",
+ "color-eyre",
  "config",
  "console-subscriber",
  "dashmap",
@@ -564,9 +564,9 @@ dependencies = [
 
 [[package]]
 name = "background-jobs"
-version = "0.17.0"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "65f83277b60c9c889210ef54207cca1a8f7e6de916ad616ce4140d477c8a6094"
+checksum = "50954581739942ccbf39f7723a250dd3044c32de2e2c7e5f8cf53cb35200136b"
 dependencies = [
  "background-jobs-core",
  "background-jobs-metrics",
@@ -575,11 +575,10 @@ dependencies = [
 
 [[package]]
 name = "background-jobs-core"
-version = "0.17.0"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "50ac54b76a9cb9bdf6bdb7a485181e9f9ab95e930aa34b6a74ebda76d04d6b11"
+checksum = "dc0f2054eb1262a98306ef87d115c368aa1d38ecdf1cc5af08021e13eb0e55a8"
 dependencies = [
- "anyhow",
  "async-trait",
  "event-listener",
  "metrics",
@@ -593,9 +592,9 @@ dependencies = [
 
 [[package]]
 name = "background-jobs-metrics"
-version = "0.17.0"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "119b921bdadd3bd666f8418054933e33b9d279203b8029c5881e3174c2821f79"
+checksum = "617da80f3fe8fe9b042d07cab58cf92ba3098b2112c4c499a27f333ebab401d2"
 dependencies = [
  "async-trait",
  "background-jobs-core",
@@ -607,11 +606,10 @@ dependencies = [
 
 [[package]]
 name = "background-jobs-tokio"
-version = "0.17.0"
+version = "0.18.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d18cbc0bda6c07ffca4146ac88d93f93f93f374012a0c425c3a8b7fd34ccce4e"
+checksum = "35759bf19b8b461e8d079f60565bf2ff8a76de36cdbe44d14de34cf4ae15c065"
 dependencies = [
- "anyhow",
  "async-trait",
  "background-jobs-core",
  "metrics",
@@ -863,6 +861,33 @@ name = "clap_lex"
 version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "702fc72eb24e5a1e48ce58027a675bc24edd52096d5397d4aea7c6dd9eca0bd1"
+
+[[package]]
+name = "color-eyre"
+version = "0.6.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a667583cca8c4f8436db8de46ea8233c42a7d9ae424a82d338f2e4675229204"
+dependencies = [
+ "backtrace",
+ "color-spantrace",
+ "eyre",
+ "indenter",
+ "once_cell",
+ "owo-colors",
+ "tracing-error",
+]
+
+[[package]]
+name = "color-spantrace"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cd6be1b2a7e382e2b98b43b2adcca6bb0e465af0bdd38123873ae61eb17a72c2"
+dependencies = [
+ "once_cell",
+ "owo-colors",
+ "tracing-core",
+ "tracing-error",
+]
 
 [[package]]
 name = "colorchoice"
@@ -1257,6 +1282,16 @@ dependencies = [
  "concurrent-queue",
  "parking",
  "pin-project-lite",
+]
+
+[[package]]
+name = "eyre"
+version = "0.6.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7cd915d99f24784cdc19fd37ef22b97e3ff0ae756c7e492e9fbfe897d61e2aec"
+dependencies = [
+ "indenter",
+ "once_cell",
 ]
 
 [[package]]
@@ -1705,6 +1740,12 @@ name = "impl-more"
 version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "206ca75c9c03ba3d4ace2460e57b189f39f43de612c2f85836e65c929701bb2d"
+
+[[package]]
+name = "indenter"
+version = "0.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ce23b50ad8242c51a442f3ff322d56b02f08852c77e4c0b4d3fd684abc89c683"
 
 [[package]]
 name = "indexmap"
@@ -2356,6 +2397,12 @@ name = "overload"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b15813163c1d831bf4a13c3610c05c0d03b39feb07f7e09fa234dac9b15aaf39"
+
+[[package]]
+name = "owo-colors"
+version = "3.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c1b04fb49957986fdce4d6ee7a65027d55d4b6d2265e5848bbb507b58ccfdb6f"
 
 [[package]]
 name = "parcel_selectors"

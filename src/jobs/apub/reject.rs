@@ -35,12 +35,13 @@ impl Reject {
 
 impl Job for Reject {
     type State = JobState;
-    type Future = BoxFuture<'static, anyhow::Result<()>>;
+    type Error = Error;
+    type Future = BoxFuture<'static, Result<(), Self::Error>>;
 
     const NAME: &'static str = "relay::jobs::apub::Reject";
     const QUEUE: &'static str = "apub";
 
     fn run(self, state: Self::State) -> Self::Future {
-        Box::pin(async move { self.perform(state).await.map_err(Into::into) })
+        Box::pin(self.perform(state))
     }
 }

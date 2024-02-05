@@ -1,19 +1,15 @@
 use actix_web::{
     dev::Payload,
     error::ParseError,
-    http::{
-        header::{from_one_raw_str, Header, HeaderName, HeaderValue, TryIntoHeaderValue},
-        StatusCode,
-    },
+    http::header::{from_one_raw_str, Header, HeaderName, HeaderValue, TryIntoHeaderValue},
     web::Data,
-    FromRequest, HttpMessage, HttpRequest, HttpResponse, ResponseError,
+    FromRequest, HttpMessage, HttpRequest,
 };
 use bcrypt::{BcryptError, DEFAULT_COST};
 use http_signature_normalization_actix::{prelude::InvalidHeaderValue, Canceled, Spawn};
 use std::{convert::Infallible, str::FromStr, time::Instant};
-use tracing_error::SpanTrace;
 
-use crate::{db::Db, future::LocalBoxFuture, spawner::Spawner};
+use crate::{db::Db, error::Error, future::LocalBoxFuture, spawner::Spawner};
 
 #[derive(Clone)]
 pub(crate) struct AdminConfig {
@@ -83,74 +79,42 @@ impl Admin {
     }
 }
 
-#[derive(Debug, thiserror::Error)]
-#[error("Failed authentication")]
-pub(crate) struct Error {
-    context: String,
-    #[source]
-    kind: ErrorKind,
-}
-
 impl Error {
     fn invalid() -> Self {
-        Error {
-            context: SpanTrace::capture().to_string(),
-            kind: ErrorKind::Invalid,
-        }
+        Error::from(ErrorKind::Invalid)
     }
 
     fn missing_config() -> Self {
-        Error {
-            context: SpanTrace::capture().to_string(),
-            kind: ErrorKind::MissingConfig,
-        }
+        Error::from(ErrorKind::MissingConfig)
     }
 
     fn missing_db() -> Self {
-        Error {
-            context: SpanTrace::capture().to_string(),
-            kind: ErrorKind::MissingDb,
-        }
+        Error::from(ErrorKind::MissingDb)
     }
 
     fn missing_spawner() -> Self {
-        Error {
-            context: SpanTrace::capture().to_string(),
-            kind: ErrorKind::MissingSpawner,
-        }
+        Error::from(ErrorKind::MissingSpawner)
     }
 
     fn bcrypt_verify(e: BcryptError) -> Self {
-        Error {
-            context: SpanTrace::capture().to_string(),
-            kind: ErrorKind::BCryptVerify(e),
-        }
+        Error::from(ErrorKind::BCryptVerify(e))
     }
 
     fn bcrypt_hash(e: BcryptError) -> Self {
-        Error {
-            context: SpanTrace::capture().to_string(),
-            kind: ErrorKind::BCryptHash(e),
-        }
+        Error::from(ErrorKind::BCryptHash(e))
     }
 
     fn parse_header(e: ParseError) -> Self {
-        Error {
-            context: SpanTrace::capture().to_string(),
-            kind: ErrorKind::ParseHeader(e),
-        }
+        Error::from(ErrorKind::ParseHeader(e))
     }
 
     fn canceled(_: Canceled) -> Self {
-        Error {
-            context: SpanTrace::capture().to_string(),
-            kind: ErrorKind::Canceled,
-        }
+        Error::from(ErrorKind::Canceled)
     }
 }
 
 #[derive(Debug, thiserror::Error)]
-enum ErrorKind {
+pub(crate) enum ErrorKind {
     #[error("Invalid API Token")]
     Invalid,
 
@@ -174,20 +138,6 @@ enum ErrorKind {
 
     #[error("Parse Header")]
     ParseHeader(#[source] ParseError),
-}
-
-impl ResponseError for Error {
-    fn status_code(&self) -> StatusCode {
-        match self.kind {
-            ErrorKind::Invalid | ErrorKind::ParseHeader(_) => StatusCode::BAD_REQUEST,
-            _ => StatusCode::INTERNAL_SERVER_ERROR,
-        }
-    }
-
-    fn error_response(&self) -> HttpResponse {
-        HttpResponse::build(self.status_code())
-            .json(serde_json::json!({ "msg": self.kind.to_string() }))
-    }
 }
 
 impl FromRequest for Admin {

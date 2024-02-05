@@ -8,7 +8,7 @@ pub(crate) struct Spawner {
 }
 
 impl Spawner {
-    pub(crate) fn build(name: &'static str, threads: u16) -> anyhow::Result<Self> {
+    pub(crate) fn build(name: &'static str, threads: u16) -> color_eyre::Result<Self> {
         let pool = CpuPool::configure()
             .name(name)
             .max_threads(threads)
