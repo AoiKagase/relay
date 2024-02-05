@@ -22,7 +22,7 @@ default = []
 
 [dependencies]
 anyhow = "1.0"
-actix-web = { version = "4.4.0", default-features = false, features = ["compress-brotli", "compress-gzip", "rustls-0_21"] }
+actix-web = { version = "4.4.0", default-features = false, features = ["compress-brotli", "compress-gzip", "rustls-0_22"] }
 actix-webfinger = { version = "0.5.0", default-features = false }
 activitystreams = "0.7.0-alpha.25"
 activitystreams-ext = "0.1.0-alpha.3"
@@ -57,8 +57,8 @@ reqwest-tracing = "0.4.5"
 ring = "0.17.5"
 rsa = { version = "0.9" }
 rsa-magic-public-key = "0.8.0"
-rustls = "0.21.0"
-rustls-channel-resolver = "0.1.0"
+rustls = "0.22.0"
+rustls-channel-resolver = "0.2.0"
 rustls-pemfile = "2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

@@ -12,7 +12,7 @@ use activitystreams::{
 };
 use config::Environment;
 use http_signature_normalization_actix::{digest::ring::Sha256, prelude::VerifyDigest};
-use rustls::{sign::CertifiedKey, Certificate, PrivateKey};
+use rustls::sign::CertifiedKey;
 use std::{
     net::{IpAddr, SocketAddr},
     path::PathBuf,
@@ -315,14 +315,13 @@ impl Config {
         let tls = if let Some(tls) = &self.tls {
             tls
         } else {
-            tracing::warn!("No TLS config present");
+            tracing::info!("No TLS config present");
             return Ok(None);
         };
 
         let certs_bytes = tokio::fs::read(&tls.cert).await?;
-        let certs = rustls_pemfile::certs(&mut certs_bytes.as_slice())
-            .map(|res| res.map(|c| Certificate(c.to_vec())))
-            .collect::<Result<Vec<_>, _>>()?;
+        let certs =
+            rustls_pemfile::certs(&mut certs_bytes.as_slice()).collect::<Result<Vec<_>, _>>()?;
 
         if certs.is_empty() {
             tracing::warn!("No certs read from certificate file");
@@ -330,16 +329,14 @@ impl Config {
         }
 
         let key_bytes = tokio::fs::read(&tls.key).await?;
-        let key = rustls_pemfile::private_key(&mut key_bytes.as_slice())?;
-
-        let key = if let Some(key) = key {
-            PrivateKey(Vec::from(key.secret_der()))
+        let key = if let Some(key) = rustls_pemfile::private_key(&mut key_bytes.as_slice())? {
+            key
         } else {
             tracing::warn!("Failed to read private key");
             return Ok(None);
         };
 
-        let key = rustls::sign::any_supported_type(&key)?;
+        let key = rustls::crypto::ring::sign::any_supported_type(&key)?;
 
         Ok(Some(CertifiedKey::new(certs, key)))
     }

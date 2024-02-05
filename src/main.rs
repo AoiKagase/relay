@@ -21,7 +21,7 @@ use tokio::task::JoinHandle;
 use tracing_actix_web::TracingLogger;
 use tracing_error::ErrorLayer;
 use tracing_log::LogTracer;
-use tracing_subscriber::{filter::Targets, fmt::format::FmtSpan, layer::SubscriberExt, Layer};
+use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer};
 
 mod admin;
 mod apub;
@@ -60,12 +60,10 @@ fn init_subscriber(
     LogTracer::init()?;
 
     let targets: Targets = std::env::var("RUST_LOG")
-        .unwrap_or_else(|_| "warn,actix_web=debug,actix_server=debug,tracing_actix_web=info".into())
+        .unwrap_or_else(|_| "info".into())
         .parse()?;
 
-    let format_layer = tracing_subscriber::fmt::layer()
-        .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
-        .with_filter(targets.clone());
+    let format_layer = tracing_subscriber::fmt::layer().with_filter(targets.clone());
 
     #[cfg(feature = "console")]
     let console_layer = ConsoleLayer::builder()
@@ -173,16 +171,16 @@ async fn main() -> Result<(), anyhow::Error> {
         collector.install()?;
     }
 
-    tracing::warn!("Opening DB");
+    tracing::info!("Opening DB");
     let db = Db::build(&config)?;
 
-    tracing::warn!("Building caches");
+    tracing::info!("Building caches");
     let actors = ActorCache::new(db.clone());
     let media = MediaCache::new(db.clone());
 
     server_main(db, actors, media, collector, config).await?;
 
-    tracing::warn!("Application exit");
+    tracing::info!("Application exit");
 
     Ok(())
 }
@@ -289,7 +287,7 @@ async fn server_main(
         config.proxy_config(),
     )?;
 
-    tracing::warn!("Creating state");
+    tracing::info!("Creating state");
 
     let (signature_threads, verify_threads) = match config.signature_threads() {
         0 | 1 => (1, 1),
@@ -309,7 +307,7 @@ async fn server_main(
     let state = State::build(db.clone(), key_id, sign_spawner.clone(), client).await?;
 
     if let Some((token, admin_handle)) = config.telegram_info() {
-        tracing::warn!("Creating telegram handler");
+        tracing::info!("Creating telegram handler");
         telegram::start(admin_handle.to_owned(), db.clone(), token);
     }
 
@@ -407,29 +405,26 @@ async fn server_main(
             }
         });
 
-        tracing::warn!("Binding to {}:{} with TLS", bind_address.0, bind_address.1);
+        tracing::info!("Binding to {}:{} with TLS", bind_address.0, bind_address.1);
         let server_config = ServerConfig::builder()
-            .with_safe_default_cipher_suites()
-            .with_safe_default_kx_groups()
-            .with_safe_default_protocol_versions()?
             .with_no_client_auth()
             .with_cert_resolver(cert_rx);
         server
-            .bind_rustls_021(bind_address, server_config)?
+            .bind_rustls_0_22(bind_address, server_config)?
             .run()
             .await?;
 
         handle.abort();
         let _ = handle.await;
     } else {
-        tracing::warn!("Binding to {}:{}", bind_address.0, bind_address.1);
+        tracing::info!("Binding to {}:{}", bind_address.0, bind_address.1);
         server.bind(bind_address)?.run().await?;
     }
 
     sign_spawner2.close().await;
     verify_spawner2.close().await;
 
-    tracing::warn!("Server closed");
+    tracing::info!("Server closed");
 
     Ok(())
 }
