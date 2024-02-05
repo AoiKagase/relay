@@ -87,7 +87,7 @@ pub(crate) enum ErrorKind {
     #[error("Couldn't make request")]
     Reqwest(#[from] reqwest::Error),
 
-    #[error("Couldn't build client")]
+    #[error("Couldn't make request")]
     ReqwestMiddleware(#[from] reqwest_middleware::Error),
 
     #[error("Couldn't parse IRI, {0}")]
