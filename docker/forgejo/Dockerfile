@@ -21,4 +21,4 @@ EXPOSE 6669
 EXPOSE 8080
 VOLUME /mnt
 ENTRYPOINT ["/sbin/tini", "--"]
-CMD ["/usr/local/bin/relay", "run"]
+CMD ["/usr/local/bin/relay"]
