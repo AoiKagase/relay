@@ -1,0 +1,226 @@
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+env:
+  REGISTRY_IMAGE: asonix/relay
+
+jobs:
+  clippy:
+    runs-on: base-image
+    container:
+      image: docker.io/asonix/actions-base-image:0.1
+    steps:
+      -
+        name: Checkout relay
+        uses: https://github.com/actions/checkout@v4
+      -
+        name: Cargo Cache
+        uses: https://git.asonix.dog/asonix/actions/cache-rust-dependencies@main
+      -
+        name: Clippy
+        run: |
+          cargo clippy --no-default-features -- -D warnings
+
+  tests:
+    runs-on: docker
+    container:
+      image: docker.io/asonix/actions-base-image:0.1
+    steps:
+      -
+        name: Checkout relay
+        uses: https://github.com/actions/checkout@v4
+      -
+        name: Cargo Cache
+        uses: https://git.asonix.dog/asonix/actions/cache-rust-dependencies@main
+      -
+        name: Test
+        run: cargo test
+
+  build:
+    needs:
+      - clippy
+      - tests
+    runs-on: docker
+    container:
+      image: docker.io/asonix/actions-base-image:0.1
+    strategy:
+      fail-fast: false
+      matrix:
+        info:
+          - target: x86_64-unknown-linux-musl
+            artifact: linux-amd64
+            platform: linux/amd64
+          - target: armv7-unknown-linux-musleabihf
+            artifact: linux-arm32v7
+            platform: linux/arm/v7
+          - target: aarch64-unknown-linux-musl
+            artifact: linux-arm64v8
+            platform: linux/arm64
+    steps:
+      -
+        name: Checkout relay
+        uses: https://github.com/actions/checkout@v4
+      -
+        name: Cargo Cache
+        uses: https://git.asonix.dog/asonix/actions/cache-rust-dependencies@main
+      -
+        name: Prepare Platform
+        run: |
+          platform=${{ matrix.info.platform }}
+          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
+        shell: bash
+      -
+        name: Docker meta
+        id: meta
+        uses: https://github.com/docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY_IMAGE }}
+          flavor: |
+            latest=auto
+            suffix=-${{ matrix.info.artifact }}
+          tags: |
+            type=raw,value=latest,enable={{ is_default_branch }}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+      -
+        name: Set up QEMU
+        uses: https://github.com/docker/setup-qemu-action@v3
+      -
+        name: Set up Docker Buildx
+        uses: https://github.com/docker/setup-buildx-action@v3
+      -
+        name: Docker login
+        uses: https://github.com/docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
+        name: Compile relay
+        run: cargo zigbuild --target ${{ matrix.info.target }} --release
+      -
+        name: Prepare artifacts
+        run: |
+          mkdir artifacts
+          cp target/${{ matrix.info.target }}/release/relay artifacts/relay-${{ matrix.info.artifact }}
+      -
+        uses: https://github.com/actions/upload-artifact@v3
+        with:
+          name: binaries
+          path: artifacts/
+      -
+        name: Prepare binary
+        run: |
+          cp target/${{ matrix.info.target }}/release/relay docker/forgejo/relay
+      -
+        name: Build and push ${{ matrix.info.platform }} docker image
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./docker/forgejo
+          platforms: ${{ matrix.info.platform }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          outputs: type=image,name=${{ env.REGISTRY_IMAGE }},name-canonical=true,push=true
+      -
+        name: Export digest
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+          echo "Created /tmp/digests/${digest#sha256:}"
+        shell: bash
+      -
+        name: Upload ${{ matrix.info.platform }} digest
+        uses: https://github.com/actions/upload-artifact@v3
+        with:
+          name: digests
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  publish-docker:
+    runs-on: docker
+    container:
+      image: docker.io/asonix/actions-base-image:0.1
+    needs: [build]
+    steps:
+      -
+        name: Download digests
+        uses: https://github.com/actions/download-artifact@v3
+        with:
+          name: digests
+          path: /tmp/digests
+          pattern: digests-*
+          merge-multiple: true
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      -
+        name: Docker login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
+        name: Docker meta
+        id: meta
+        uses: https://github.com/docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY_IMAGE }}
+          flavor: |
+            latest=auto
+          tags: |
+            type=raw,value=latest,enable={{ is_default_branch }}
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+      -
+        name: Create manifest list and push
+        working-directory: /tmp/digests
+        run: |
+          tags=$(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "${DOCKER_METADATA_OUTPUT_JSON}")
+          images=$(printf "${{ env.REGISTRY_IMAGE }}@sha256:%s " *)
+          echo "Running 'docker buildx imagetools create ${tags[@]} ${images[@]}'"
+          docker buildx imagetools create ${tags[@]} ${images[@]}
+        shell: bash
+      -
+        name: Inspect Image
+        run: |
+          docker buildx imagetools inspect ${{ env.REGISTRY_IMAGE }}:${{ steps.meta.outputs.version }}
+
+  publish-forgejo:
+    needs: [build]
+    runs-on: docker
+    container:
+      image: docker.io/asonix/actions-base-image:0.1
+    steps:
+      - uses: https://github.com/actions/download-artifact@v3
+        with:
+          name: binaries
+          path: artifacts/
+          merge-multiple: true
+      - uses: actions/forgejo-release@v1
+        with:
+          direction: upload
+          token: ${{ secrets.GITHUB_TOKEN }}
+          release-dir: artifacts/
+          prerelease: true
+
+  publish-crate:
+    needs: [build]
+    runs-on: docker
+    container:
+      image: docker.io/asonix/actions-base-image:0.1
+    steps:
+      -
+        name: Checkout relay
+        uses: https://github.com/actions/checkout@v4
+      -
+        name: Cargo Cache
+        uses: https://git.asonix.dog/asonix/actions/cache-rust-dependencies@main
+      -
+        name: Publish Crate
+        run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}
