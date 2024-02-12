@@ -14,9 +14,12 @@ build = "src/build.rs"
 name = "relay"
 path = "src/main.rs"
 
+[profile.release]
+strip = true
+
 [features]
 console = ["dep:console-subscriber"]
-default = []
+default = ["console"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
