@@ -1,10 +1,10 @@
 use crate::{
     error::Error,
-    future::LocalBoxFuture,
+    future::BoxFuture,
     jobs::{debug_object, Deliver, JobState},
 };
 use activitystreams::iri_string::types::IriString;
-use background_jobs::ActixJob;
+use background_jobs::Job;
 
 #[derive(Clone, serde::Deserialize, serde::Serialize)]
 pub(crate) struct DeliverMany {
@@ -45,14 +45,15 @@ impl DeliverMany {
     }
 }
 
-impl ActixJob for DeliverMany {
+impl Job for DeliverMany {
     type State = JobState;
-    type Future = LocalBoxFuture<'static, Result<(), anyhow::Error>>;
+    type Error = Error;
+    type Future = BoxFuture<'static, Result<(), Self::Error>>;
 
     const NAME: &'static str = "relay::jobs::DeliverMany";
     const QUEUE: &'static str = "deliver";
 
     fn run(self, state: Self::State) -> Self::Future {
-        Box::pin(async move { self.perform(state).await.map_err(Into::into) })
+        Box::pin(self.perform(state))
     }
 }

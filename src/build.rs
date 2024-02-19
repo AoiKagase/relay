@@ -21,7 +21,7 @@ fn git_info() {
     }
 }
 
-fn version_info() -> Result<(), anyhow::Error> {
+fn version_info() -> color_eyre::Result<()> {
     let cargo_toml = Path::new(&std::env::var("CARGO_MANIFEST_DIR")?).join("Cargo.toml");
 
     let mut file = File::open(cargo_toml)?;
@@ -42,7 +42,7 @@ fn version_info() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-fn main() -> Result<(), anyhow::Error> {
+fn main() -> color_eyre::Result<()> {
     dotenv::dotenv().ok();
 
     git_info();

@@ -1,11 +1,11 @@
 use crate::{
     error::Error,
+    future::BoxFuture,
     jobs::{debug_object, JobState},
     requests::BreakerStrategy,
 };
 use activitystreams::iri_string::types::IriString;
-use background_jobs::{ActixJob, Backoff};
-use std::{future::Future, pin::Pin};
+use background_jobs::{Backoff, Job};
 
 #[derive(Clone, serde::Deserialize, serde::Serialize)]
 pub(crate) struct Deliver {
@@ -35,7 +35,7 @@ impl Deliver {
     }
 
     #[tracing::instrument(name = "Deliver", skip(state))]
-    async fn permform(self, state: JobState) -> Result<(), Error> {
+    async fn perform(self, state: JobState) -> Result<(), Error> {
         if let Err(e) = state
             .state
             .requests
@@ -56,15 +56,16 @@ impl Deliver {
     }
 }
 
-impl ActixJob for Deliver {
+impl Job for Deliver {
     type State = JobState;
-    type Future = Pin<Box<dyn Future<Output = Result<(), anyhow::Error>>>>;
+    type Error = Error;
+    type Future = BoxFuture<'static, Result<(), Self::Error>>;
 
     const NAME: &'static str = "relay::jobs::Deliver";
     const QUEUE: &'static str = "deliver";
     const BACKOFF: Backoff = Backoff::Exponential(8);
 
     fn run(self, state: Self::State) -> Self::Future {
-        Box::pin(async move { self.permform(state).await.map_err(Into::into) })
+        Box::pin(self.perform(state))
     }
 }
