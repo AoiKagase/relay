@@ -1,12 +1,12 @@
 use crate::{
     config::UrlKind,
     error::{Error, ErrorKind},
+    future::BoxFuture,
     jobs::{Boolish, JobState},
     requests::BreakerStrategy,
 };
 use activitystreams::{iri, iri_string::types::IriString};
-use background_jobs::ActixJob;
-use std::{future::Future, pin::Pin};
+use background_jobs::Job;
 
 #[derive(Clone, serde::Deserialize, serde::Serialize)]
 pub(crate) struct QueryInstance {
@@ -169,15 +169,16 @@ impl QueryInstance {
     }
 }
 
-impl ActixJob for QueryInstance {
+impl Job for QueryInstance {
     type State = JobState;
-    type Future = Pin<Box<dyn Future<Output = Result<(), anyhow::Error>>>>;
+    type Error = Error;
+    type Future = BoxFuture<'static, Result<(), Self::Error>>;
 
     const NAME: &'static str = "relay::jobs::QueryInstance";
     const QUEUE: &'static str = "maintenance";
 
     fn run(self, state: Self::State) -> Self::Future {
-        Box::pin(async move { self.perform(state).await.map_err(Into::into) })
+        Box::pin(self.perform(state))
     }
 }
 

@@ -4,7 +4,6 @@
 use std::time::Duration;
 
 use activitystreams::iri_string::types::IriString;
-use actix_rt::task::JoinHandle;
 use actix_web::{middleware::Compress, web, App, HttpServer};
 use collector::MemoryCollector;
 #[cfg(feature = "console")]
@@ -13,14 +12,16 @@ use error::Error;
 use http_signature_normalization_actix::middleware::VerifySignature;
 use metrics_exporter_prometheus::PrometheusBuilder;
 use metrics_util::layers::FanoutBuilder;
-use opentelemetry::{sdk::Resource, KeyValue};
+use opentelemetry::KeyValue;
 use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_sdk::Resource;
 use reqwest_middleware::ClientWithMiddleware;
 use rustls::ServerConfig;
+use tokio::task::JoinHandle;
 use tracing_actix_web::TracingLogger;
 use tracing_error::ErrorLayer;
 use tracing_log::LogTracer;
-use tracing_subscriber::{filter::Targets, fmt::format::FmtSpan, layer::SubscriberExt, Layer};
+use tracing_subscriber::{filter::Targets, layer::SubscriberExt, Layer};
 
 mod admin;
 mod apub;
@@ -55,16 +56,15 @@ use self::{
 fn init_subscriber(
     software_name: &'static str,
     opentelemetry_url: Option<&IriString>,
-) -> Result<(), anyhow::Error> {
+) -> color_eyre::Result<()> {
     LogTracer::init()?;
+    color_eyre::install()?;
 
     let targets: Targets = std::env::var("RUST_LOG")
-        .unwrap_or_else(|_| "warn,actix_web=debug,actix_server=debug,tracing_actix_web=info".into())
+        .unwrap_or_else(|_| "info".into())
         .parse()?;
 
-    let format_layer = tracing_subscriber::fmt::layer()
-        .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
-        .with_filter(targets.clone());
+    let format_layer = tracing_subscriber::fmt::layer().with_filter(targets.clone());
 
     #[cfg(feature = "console")]
     let console_layer = ConsoleLayer::builder()
@@ -81,18 +81,19 @@ fn init_subscriber(
     let subscriber = subscriber.with(console_layer);
 
     if let Some(url) = opentelemetry_url {
-        let tracer =
-            opentelemetry_otlp::new_pipeline()
-                .tracing()
-                .with_trace_config(opentelemetry::sdk::trace::config().with_resource(
-                    Resource::new(vec![KeyValue::new("service.name", software_name)]),
-                ))
-                .with_exporter(
-                    opentelemetry_otlp::new_exporter()
-                        .tonic()
-                        .with_endpoint(url.as_str()),
-                )
-                .install_batch(opentelemetry::runtime::Tokio)?;
+        let tracer = opentelemetry_otlp::new_pipeline()
+            .tracing()
+            .with_trace_config(
+                opentelemetry_sdk::trace::config().with_resource(Resource::new(vec![
+                    KeyValue::new("service.name", software_name),
+                ])),
+            )
+            .with_exporter(
+                opentelemetry_otlp::new_exporter()
+                    .tonic()
+                    .with_endpoint(url.as_str()),
+            )
+            .install_batch(opentelemetry_sdk::runtime::Tokio)?;
 
         let otel_layer = tracing_opentelemetry::layer()
             .with_tracer(tracer)
@@ -139,8 +140,8 @@ fn build_client(
     Ok(client_with_middleware)
 }
 
-#[actix_rt::main]
-async fn main() -> Result<(), anyhow::Error> {
+#[tokio::main]
+async fn main() -> color_eyre::Result<()> {
     dotenv::dotenv().ok();
 
     let config = Config::build()?;
@@ -150,7 +151,8 @@ async fn main() -> Result<(), anyhow::Error> {
     let args = Args::new();
 
     if args.any() {
-        return client_main(config, args).await?;
+        client_main(config, args).await??;
+        return Ok(());
     }
 
     let collector = MemoryCollector::new();
@@ -160,35 +162,35 @@ async fn main() -> Result<(), anyhow::Error> {
             .with_http_listener(bind_addr)
             .build()?;
 
-        actix_rt::spawn(exporter);
+        tokio::spawn(exporter);
         let recorder = FanoutBuilder::default()
             .add_recorder(recorder)
             .add_recorder(collector.clone())
             .build();
-        metrics::set_boxed_recorder(Box::new(recorder))?;
+        metrics::set_global_recorder(recorder).map_err(|e| color_eyre::eyre::eyre!("{e}"))?;
     } else {
         collector.install()?;
     }
 
-    tracing::warn!("Opening DB");
+    tracing::info!("Opening DB");
     let db = Db::build(&config)?;
 
-    tracing::warn!("Building caches");
+    tracing::info!("Building caches");
     let actors = ActorCache::new(db.clone());
     let media = MediaCache::new(db.clone());
 
-    server_main(db, actors, media, collector, config).await??;
+    server_main(db, actors, media, collector, config).await?;
 
-    tracing::warn!("Application exit");
+    tracing::info!("Application exit");
 
     Ok(())
 }
 
-fn client_main(config: Config, args: Args) -> JoinHandle<Result<(), anyhow::Error>> {
-    actix_rt::spawn(do_client_main(config, args))
+fn client_main(config: Config, args: Args) -> JoinHandle<color_eyre::Result<()>> {
+    tokio::spawn(do_client_main(config, args))
 }
 
-async fn do_client_main(config: Config, args: Args) -> Result<(), anyhow::Error> {
+async fn do_client_main(config: Config, args: Args) -> color_eyre::Result<()> {
     let client = build_client(
         &config.user_agent(),
         config.client_timeout(),
@@ -271,32 +273,22 @@ async fn do_client_main(config: Config, args: Args) -> Result<(), anyhow::Error>
     Ok(())
 }
 
-fn server_main(
-    db: Db,
-    actors: ActorCache,
-    media: MediaCache,
-    collector: MemoryCollector,
-    config: Config,
-) -> JoinHandle<Result<(), anyhow::Error>> {
-    actix_rt::spawn(do_server_main(db, actors, media, collector, config))
-}
-
 const VERIFY_RATIO: usize = 7;
 
-async fn do_server_main(
+async fn server_main(
     db: Db,
     actors: ActorCache,
     media: MediaCache,
     collector: MemoryCollector,
     config: Config,
-) -> Result<(), anyhow::Error> {
+) -> color_eyre::Result<()> {
     let client = build_client(
         &config.user_agent(),
         config.client_timeout(),
         config.proxy_config(),
     )?;
 
-    tracing::warn!("Creating state");
+    tracing::info!("Creating state");
 
     let (signature_threads, verify_threads) = match config.signature_threads() {
         0 | 1 => (1, 1),
@@ -309,23 +301,30 @@ async fn do_server_main(
         }
     };
 
-    let verify_spawner = Spawner::build("verify-cpu", verify_threads)?;
-    let sign_spawner = Spawner::build("sign-cpu", signature_threads)?;
+    let verify_spawner = Spawner::build("verify-cpu", verify_threads.try_into()?)?;
+    let sign_spawner = Spawner::build("sign-cpu", signature_threads.try_into()?)?;
 
     let key_id = config.generate_url(UrlKind::MainKey).to_string();
-    let state = State::build(db.clone(), key_id, sign_spawner, client).await?;
+    let state = State::build(db.clone(), key_id, sign_spawner.clone(), client).await?;
 
     if let Some((token, admin_handle)) = config.telegram_info() {
-        tracing::warn!("Creating telegram handler");
+        tracing::info!("Creating telegram handler");
         telegram::start(admin_handle.to_owned(), db.clone(), token);
     }
 
-    let keys = config.open_keys()?;
+    let cert_resolver = config
+        .open_keys()
+        .await?
+        .map(rustls_channel_resolver::channel::<32>);
 
     let bind_address = config.bind_address();
+    let sign_spawner2 = sign_spawner.clone();
+    let verify_spawner2 = verify_spawner.clone();
+    let config2 = config.clone();
     let server = HttpServer::new(move || {
         let job_server =
-            create_workers(state.clone(), actors.clone(), media.clone(), config.clone());
+            create_workers(state.clone(), actors.clone(), media.clone(), config.clone())
+                .expect("Failed to create job server");
 
         let app = App::new()
             .app_data(web::Data::new(db.clone()))
@@ -391,24 +390,42 @@ async fn do_server_main(
             )
     });
 
-    if let Some((certs, key)) = keys {
-        tracing::warn!("Binding to {}:{} with TLS", bind_address.0, bind_address.1);
+    if let Some((cert_tx, cert_rx)) = cert_resolver {
+        let handle = tokio::spawn(async move {
+            let mut interval = tokio::time::interval(Duration::from_secs(30));
+            interval.tick().await;
+
+            loop {
+                interval.tick().await;
+
+                match config2.open_keys().await {
+                    Ok(Some(key)) => cert_tx.update(key),
+                    Ok(None) => tracing::warn!("Missing TLS keys"),
+                    Err(e) => tracing::error!("Failed to read TLS keys {e}"),
+                }
+            }
+        });
+
+        tracing::info!("Binding to {}:{} with TLS", bind_address.0, bind_address.1);
         let server_config = ServerConfig::builder()
-            .with_safe_default_cipher_suites()
-            .with_safe_default_kx_groups()
-            .with_safe_default_protocol_versions()?
             .with_no_client_auth()
-            .with_single_cert(certs, key)?;
+            .with_cert_resolver(cert_rx);
         server
-            .bind_rustls_021(bind_address, server_config)?
+            .bind_rustls_0_22(bind_address, server_config)?
             .run()
             .await?;
+
+        handle.abort();
+        let _ = handle.await;
     } else {
-        tracing::warn!("Binding to {}:{}", bind_address.0, bind_address.1);
+        tracing::info!("Binding to {}:{}", bind_address.0, bind_address.1);
         server.bind(bind_address)?.run().await?;
     }
 
-    tracing::warn!("Server closed");
+    sign_spawner2.close().await;
+    verify_spawner2.close().await;
+
+    tracing::info!("Server closed");
 
     Ok(())
 }

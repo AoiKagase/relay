@@ -12,9 +12,8 @@ use activitystreams::{
 };
 use config::Environment;
 use http_signature_normalization_actix::{digest::ring::Sha256, prelude::VerifyDigest};
-use rustls::{Certificate, PrivateKey};
+use rustls::sign::CertifiedKey;
 use std::{
-    io::BufReader,
     net::{IpAddr, SocketAddr},
     path::PathBuf,
 };
@@ -312,43 +311,34 @@ impl Config {
         Some((config.addr, config.port).into())
     }
 
-    pub(crate) fn open_keys(&self) -> Result<Option<(Vec<Certificate>, PrivateKey)>, Error> {
+    pub(crate) async fn open_keys(&self) -> Result<Option<CertifiedKey>, Error> {
         let tls = if let Some(tls) = &self.tls {
             tls
         } else {
-            tracing::warn!("No TLS config present");
+            tracing::info!("No TLS config present");
             return Ok(None);
         };
 
-        let mut certs_reader = BufReader::new(std::fs::File::open(&tls.cert)?);
-        let certs = rustls_pemfile::certs(&mut certs_reader)?;
+        let certs_bytes = tokio::fs::read(&tls.cert).await?;
+        let certs =
+            rustls_pemfile::certs(&mut certs_bytes.as_slice()).collect::<Result<Vec<_>, _>>()?;
 
         if certs.is_empty() {
             tracing::warn!("No certs read from certificate file");
             return Ok(None);
         }
 
-        let mut key_reader = BufReader::new(std::fs::File::open(&tls.key)?);
-        let key = rustls_pemfile::read_one(&mut key_reader)?;
-
-        let certs = certs.into_iter().map(Certificate).collect();
-
-        let key = if let Some(key) = key {
-            match key {
-                rustls_pemfile::Item::RSAKey(der) => PrivateKey(der),
-                rustls_pemfile::Item::PKCS8Key(der) => PrivateKey(der),
-                rustls_pemfile::Item::ECKey(der) => PrivateKey(der),
-                _ => {
-                    tracing::warn!("Unknown key format: {:?}", key);
-                    return Ok(None);
-                }
-            }
+        let key_bytes = tokio::fs::read(&tls.key).await?;
+        let key = if let Some(key) = rustls_pemfile::private_key(&mut key_bytes.as_slice())? {
+            key
         } else {
             tracing::warn!("Failed to read private key");
             return Ok(None);
         };
 
-        Ok(Some((certs, key)))
+        let key = rustls::crypto::ring::sign::any_supported_type(&key)?;
+
+        Ok(Some(CertifiedKey::new(certs, key)))
     }
 
     #[allow(dead_code)]

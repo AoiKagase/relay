@@ -1,57 +1,85 @@
 use activitystreams::checked::CheckError;
-use actix_rt::task::JoinError;
 use actix_web::{
     error::{BlockingError, ResponseError},
     http::StatusCode,
     HttpResponse,
 };
+use background_jobs::BoxError;
+use color_eyre::eyre::Error as Report;
 use http_signature_normalization_reqwest::SignError;
-use std::{convert::Infallible, fmt::Debug, io};
-use tracing_error::SpanTrace;
+use std::{convert::Infallible, io, sync::Arc};
+use tokio::task::JoinError;
+
+#[derive(Clone)]
+struct ArcKind {
+    kind: Arc<ErrorKind>,
+}
+
+impl std::fmt::Debug for ArcKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.kind.fmt(f)
+    }
+}
+
+impl std::fmt::Display for ArcKind {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.kind.fmt(f)
+    }
+}
+
+impl std::error::Error for ArcKind {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        self.kind.source()
+    }
+}
 
 pub(crate) struct Error {
-    context: String,
-    kind: ErrorKind,
+    kind: ArcKind,
+    display: Box<str>,
+    debug: Box<str>,
 }
 
 impl Error {
+    fn kind(&self) -> &ErrorKind {
+        &self.kind.kind
+    }
+
     pub(crate) fn is_breaker(&self) -> bool {
-        matches!(self.kind, ErrorKind::Breaker)
+        matches!(self.kind(), ErrorKind::Breaker)
     }
 
     pub(crate) fn is_not_found(&self) -> bool {
-        matches!(self.kind, ErrorKind::Status(_, StatusCode::NOT_FOUND))
+        matches!(self.kind(), ErrorKind::Status(_, StatusCode::NOT_FOUND))
     }
 
     pub(crate) fn is_bad_request(&self) -> bool {
-        matches!(self.kind, ErrorKind::Status(_, StatusCode::BAD_REQUEST))
+        matches!(self.kind(), ErrorKind::Status(_, StatusCode::BAD_REQUEST))
     }
 
     pub(crate) fn is_gone(&self) -> bool {
-        matches!(self.kind, ErrorKind::Status(_, StatusCode::GONE))
+        matches!(self.kind(), ErrorKind::Status(_, StatusCode::GONE))
     }
 
     pub(crate) fn is_malformed_json(&self) -> bool {
-        matches!(self.kind, ErrorKind::Json(_))
+        matches!(self.kind(), ErrorKind::Json(_))
     }
 }
 
 impl std::fmt::Debug for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "{:?}", self.kind)
+        f.write_str(&self.debug)
     }
 }
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        writeln!(f, "{}", self.kind)?;
-        std::fmt::Display::fmt(&self.context, f)
+        f.write_str(&self.display)
     }
 }
 
 impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        self.kind.source()
+        self.kind().source()
     }
 }
 
@@ -60,25 +88,36 @@ where
     ErrorKind: From<T>,
 {
     fn from(error: T) -> Self {
+        let kind = ArcKind {
+            kind: Arc::new(ErrorKind::from(error)),
+        };
+        let report = Report::new(kind.clone());
+        let display = format!("{report}");
+        let debug = format!("{report:?}");
+
         Error {
-            context: SpanTrace::capture().to_string(),
-            kind: error.into(),
+            kind,
+            display: Box::from(display),
+            debug: Box::from(debug),
         }
     }
 }
 
 #[derive(Debug, thiserror::Error)]
 pub(crate) enum ErrorKind {
-    #[error("Error queueing job, {0}")]
-    Queue(anyhow::Error),
+    #[error("Error in extractor")]
+    Extractor(#[from] crate::extractors::ErrorKind),
 
-    #[error("Error in configuration, {0}")]
+    #[error("Error queueing job")]
+    Queue(#[from] BoxError),
+
+    #[error("Error in configuration")]
     Config(#[from] config::ConfigError),
 
-    #[error("Couldn't parse key, {0}")]
+    #[error("Couldn't parse key")]
     Pkcs8(#[from] rsa::pkcs8::Error),
 
-    #[error("Couldn't encode public key, {0}")]
+    #[error("Couldn't encode public key")]
     Spki(#[from] rsa::pkcs8::spki::Error),
 
     #[error("Couldn't sign request")]
@@ -87,32 +126,35 @@ pub(crate) enum ErrorKind {
     #[error("Couldn't make request")]
     Reqwest(#[from] reqwest::Error),
 
-    #[error("Couldn't build client")]
+    #[error("Couldn't make request")]
     ReqwestMiddleware(#[from] reqwest_middleware::Error),
 
-    #[error("Couldn't parse IRI, {0}")]
+    #[error("Couldn't parse IRI")]
     ParseIri(#[from] activitystreams::iri_string::validate::Error),
 
-    #[error("Couldn't normalize IRI, {0}")]
+    #[error("Couldn't normalize IRI")]
     NormalizeIri(#[from] std::collections::TryReserveError),
 
-    #[error("Couldn't perform IO, {0}")]
+    #[error("Couldn't perform IO")]
     Io(#[from] io::Error),
 
     #[error("Couldn't sign string, {0}")]
     Rsa(rsa::errors::Error),
 
-    #[error("Couldn't use db, {0}")]
+    #[error("Couldn't use db")]
     Sled(#[from] sled::Error),
 
-    #[error("Couldn't do the json thing, {0}")]
+    #[error("Couldn't do the json thing")]
     Json(#[from] serde_json::Error),
 
-    #[error("Couldn't sign request, {0}")]
+    #[error("Couldn't sign request")]
     Sign(#[from] SignError),
 
     #[error("Couldn't sign digest")]
     Signature(#[from] rsa::signature::Error),
+
+    #[error("Couldn't prepare TLS private key")]
+    PrepareKey(#[from] rustls::Error),
 
     #[error("Couldn't verify signature")]
     VerifySignature,
@@ -144,10 +186,10 @@ pub(crate) enum ErrorKind {
     #[error("Wrong ActivityPub kind, {0}")]
     Kind(String),
 
-    #[error("Too many CPUs, {0}")]
+    #[error("Too many CPUs")]
     CpuCount(#[from] std::num::TryFromIntError),
 
-    #[error("{0}")]
+    #[error("Host mismatch")]
     HostMismatch(#[from] CheckError),
 
     #[error("Couldn't flush buffer")]
@@ -201,7 +243,7 @@ pub(crate) enum ErrorKind {
 
 impl ResponseError for Error {
     fn status_code(&self) -> StatusCode {
-        match self.kind {
+        match self.kind() {
             ErrorKind::NotAllowed(_) | ErrorKind::WrongActor(_) | ErrorKind::BadActor(_, _) => {
                 StatusCode::FORBIDDEN
             }
@@ -221,7 +263,7 @@ impl ResponseError for Error {
             .insert_header(("Content-Type", "application/activity+json"))
             .body(
                 serde_json::to_string(&serde_json::json!({
-                    "error": self.kind.to_string(),
+                    "error": self.kind().to_string(),
                 }))
                 .unwrap_or_else(|_| "{}".to_string()),
             )
