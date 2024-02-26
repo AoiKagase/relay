@@ -19,7 +19,7 @@ strip = true
 
 [features]
 console = ["dep:console-subscriber"]
-default = ["console"]
+default = []
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
