@@ -5,7 +5,7 @@
 
 rustPlatform.buildRustPackage {
   pname = "relay";
-  version = "0.3.109";
+  version = "0.3.110";
   src = ./.;
   cargoLock.lockFile = ./Cargo.lock;
 
