@@ -382,7 +382,7 @@ checksum = "0952808a6c2afd1aa8947271f3a60f1a6763c7b912d210184c5149b5cf147247"
 
 [[package]]
 name = "ap-relay"
-version = "0.3.110"
+version = "0.3.111"
 dependencies = [
  "activitystreams",
  "activitystreams-ext",
