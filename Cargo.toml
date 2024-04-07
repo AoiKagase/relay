@@ -1,7 +1,7 @@
 [package]
 name = "ap-relay"
 description = "A simple activitypub relay"
-version = "0.3.109"
+version = "0.3.110"
 authors = ["asonix <asonix@asonix.dog>"]
 license = "AGPL-3.0"
 readme = "README.md"
@@ -28,10 +28,10 @@ actix-web = { version = "4.4.0", default-features = false, features = ["compress
 actix-webfinger = { version = "0.5.0", default-features = false }
 activitystreams = "0.7.0-alpha.25"
 activitystreams-ext = "0.1.0-alpha.3"
-ammonia = "3.1.0"
+ammonia = "4.0.0"
 async-cpupool = "0.2.0"
 bcrypt = "0.15"
-base64 = "0.21"
+base64 = "0.22"
 clap = { version = "4.0.0", features = ["derive"] }
 color-eyre = "0.6.2"
 config = { version = "0.14.0", default-features = false, features = ["toml", "json", "yaml"] }
