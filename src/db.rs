@@ -7,7 +7,7 @@ use rsa::{
     pkcs8::{DecodePrivateKey, EncodePrivateKey},
     RsaPrivateKey,
 };
-use sled::{Batch, Tree};
+use sled::{transaction::TransactionError, Batch, Transactional, Tree};
 use std::{
     collections::{BTreeMap, HashMap},
     sync::{
@@ -283,10 +283,15 @@ impl Db {
     pub(crate) async fn check_health(&self) -> Result<(), Error> {
         let next = self.inner.healthz_counter.fetch_add(1, Ordering::Relaxed);
         self.unblock(move |inner| {
-            inner
+            let res = inner
                 .healthz
                 .insert("healthz", &next.to_be_bytes()[..])
-                .map_err(Error::from)
+                .map_err(Error::from);
+
+            metrics::gauge!("relay.db.healthz.size")
+                .set(crate::collector::recordable(inner.healthz.len()));
+
+            res
         })
         .await?;
         self.inner.healthz.flush_async().await?;
@@ -349,6 +354,9 @@ impl Db {
                 .actor_id_info
                 .insert(actor_id.as_str().as_bytes(), vec)?;
 
+            metrics::gauge!("relay.db.actor-id-info.size")
+                .set(crate::collector::recordable(inner.actor_id_info.len()));
+
             Ok(())
         })
         .await
@@ -382,6 +390,9 @@ impl Db {
             inner
                 .actor_id_instance
                 .insert(actor_id.as_str().as_bytes(), vec)?;
+
+            metrics::gauge!("relay.db.actor-id-instance.size")
+                .set(crate::collector::recordable(inner.actor_id_instance.len()));
 
             Ok(())
         })
@@ -417,6 +428,9 @@ impl Db {
                 .actor_id_contact
                 .insert(actor_id.as_str().as_bytes(), vec)?;
 
+            metrics::gauge!("relay.db.actor-id-contact.size")
+                .set(crate::collector::recordable(inner.actor_id_contact.len()));
+
             Ok(())
         })
         .await
@@ -447,6 +461,12 @@ impl Db {
             inner
                 .media_url_media_id
                 .insert(url.as_str().as_bytes(), id.as_bytes())?;
+
+            metrics::gauge!("relay.db.media-id-media-url.size")
+                .set(crate::collector::recordable(inner.media_id_media_url.len()));
+            metrics::gauge!("relay.db.media-url-media-id.size")
+                .set(crate::collector::recordable(inner.media_url_media_id.len()));
+
             Ok(())
         })
         .await
@@ -538,6 +558,14 @@ impl Db {
             inner
                 .actor_id_actor
                 .insert(actor.id.as_str().as_bytes(), vec)?;
+
+            metrics::gauge!("relay.db.public-key-actor-id.size").set(crate::collector::recordable(
+                inner.public_key_id_actor_id.len(),
+            ));
+
+            metrics::gauge!("relay.db.actor-id-actor.size").set(crate::collector::recordable(
+                inner.public_key_id_actor_id.len(),
+            ));
             Ok(())
         })
         .await
@@ -549,6 +577,10 @@ impl Db {
             inner
                 .connected_actor_ids
                 .remove(actor_id.as_str().as_bytes())?;
+
+            metrics::gauge!("relay.db.connected-actor-ids.size").set(crate::collector::recordable(
+                inner.connected_actor_ids.len(),
+            ));
 
             Ok(())
         })
@@ -562,6 +594,10 @@ impl Db {
                 .connected_actor_ids
                 .insert(actor_id.as_str().as_bytes(), actor_id.as_str().as_bytes())?;
 
+            metrics::gauge!("relay.db.connected-actor-ids.size").set(crate::collector::recordable(
+                inner.connected_actor_ids.len(),
+            ));
+
             Ok(())
         })
         .await
@@ -569,29 +605,59 @@ impl Db {
 
     pub(crate) async fn add_blocks(&self, domains: Vec<String>) -> Result<(), Error> {
         self.unblock(move |inner| {
+            let mut connected_batch = Batch::default();
+            let mut blocked_batch = Batch::default();
+            let mut allowed_batch = Batch::default();
+
             for connected in inner.connected_by_domain(&domains) {
-                inner
-                    .connected_actor_ids
-                    .remove(connected.as_str().as_bytes())?;
+                connected_batch.remove(connected.as_str().as_bytes());
             }
 
             for authority in &domains {
-                inner
-                    .blocked_domains
-                    .insert(domain_key(authority), authority.as_bytes())?;
-                inner.allowed_domains.remove(domain_key(authority))?;
+                blocked_batch.insert(domain_key(authority), authority.as_bytes());
+                allowed_batch.remove(domain_key(authority));
             }
 
-            Ok(())
+            let res = (
+                &inner.connected_actor_ids,
+                &inner.blocked_domains,
+                &inner.allowed_domains,
+            )
+                .transaction(|(connected, blocked, allowed)| {
+                    inner.connected_actor_ids.apply_batch(&connected_batch)?;
+                    inner.blocked_domains.apply_batch(&blocked_batch)?;
+                    inner.allowed_domains.apply_batch(&allowed_batch)?;
+                    Ok(())
+                });
+
+            metrics::gauge!("relay.db.connected-actor-ids.size").set(crate::collector::recordable(
+                inner.connected_actor_ids.len(),
+            ));
+            metrics::gauge!("relay.db.blocked-domains.size")
+                .set(crate::collector::recordable(inner.blocked_domains.len()));
+            metrics::gauge!("relay.db.allowed-domains.size")
+                .set(crate::collector::recordable(inner.allowed_domains.len()));
+
+            match res {
+                Ok(()) => Ok(()),
+                Err(TransactionError::Abort(e) | TransactionError::Storage(e)) => Err(e.into()),
+            }
         })
         .await
     }
 
     pub(crate) async fn remove_blocks(&self, domains: Vec<String>) -> Result<(), Error> {
         self.unblock(move |inner| {
+            let mut blocked_batch = Batch::default();
+
             for authority in &domains {
-                inner.blocked_domains.remove(domain_key(authority))?;
+                blocked_batch.remove(domain_key(authority));
             }
+
+            inner.blocked_domains.apply_batch(blocked_batch)?;
+
+            metrics::gauge!("relay.db.blocked-domains.size")
+                .set(crate::collector::recordable(inner.blocked_domains.len()));
 
             Ok(())
         })
@@ -600,11 +666,16 @@ impl Db {
 
     pub(crate) async fn add_allows(&self, domains: Vec<String>) -> Result<(), Error> {
         self.unblock(move |inner| {
+            let mut allowed_batch = Batch::default();
+
             for authority in &domains {
-                inner
-                    .allowed_domains
-                    .insert(domain_key(authority), authority.as_bytes())?;
+                allowed_batch.insert(domain_key(authority), authority.as_bytes());
             }
+
+            inner.allowed_domains.apply_batch(allowed_batch)?;
+
+            metrics::gauge!("relay.db.allowed-domains.size")
+                .set(crate::collector::recordable(inner.allowed_domains.len()));
 
             Ok(())
         })
@@ -614,16 +685,29 @@ impl Db {
     pub(crate) async fn remove_allows(&self, domains: Vec<String>) -> Result<(), Error> {
         self.unblock(move |inner| {
             if inner.restricted_mode {
+                let mut connected_batch = Batch::default();
+
                 for connected in inner.connected_by_domain(&domains) {
-                    inner
-                        .connected_actor_ids
-                        .remove(connected.as_str().as_bytes())?;
+                    connected_batch.remove(connected.as_str().as_bytes());
                 }
+
+                inner.connected_actor_ids.apply_batch(connected_batch)?;
+
+                metrics::gauge!("relay.db.connected-actor-ids.size").set(
+                    crate::collector::recordable(inner.connected_actor_ids.len()),
+                );
             }
 
+            let mut allowed_batch = Batch::default();
+
             for authority in &domains {
-                inner.allowed_domains.remove(domain_key(authority))?;
+                allowed_batch.remove(domain_key(authority));
             }
+
+            inner.allowed_domains.apply_batch(allowed_batch)?;
+
+            metrics::gauge!("relay.db.allowed-domains.size")
+                .set(crate::collector::recordable(inner.allowed_domains.len()));
 
             Ok(())
         })
@@ -665,6 +749,10 @@ impl Db {
             inner
                 .settings
                 .insert("private-key".as_bytes(), pem_pkcs8.as_bytes())?;
+
+            metrics::gauge!("relay.db.settings.size")
+                .set(crate::collector::recordable(inner.settings.len()));
+
             Ok(())
         })
         .await

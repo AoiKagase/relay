@@ -9,10 +9,10 @@ pub(crate) struct LastOnline {
 impl LastOnline {
     pub(crate) fn mark_seen(&self, iri: &IriStr) {
         if let Some(authority) = iri.authority_str() {
-            self.domains
-                .lock()
-                .unwrap()
-                .insert(authority.to_string(), OffsetDateTime::now_utc());
+            let mut guard = self.domains.lock().unwrap();
+            guard.insert(authority.to_string(), OffsetDateTime::now_utc());
+            metrics::gauge!("relay.last-online.size",)
+                .set(crate::collector::recordable(guard.len()));
         }
     }
 

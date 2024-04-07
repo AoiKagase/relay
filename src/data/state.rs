@@ -73,7 +73,9 @@ impl State {
     }
 
     pub(crate) fn cache(&self, object_id: IriString, actor_id: IriString) {
-        self.object_cache.write().unwrap().put(object_id, actor_id);
+        let mut guard = self.object_cache.write().unwrap();
+        guard.put(object_id, actor_id);
+        metrics::gauge!("relay.object-cache.size").set(crate::collector::recordable(guard.len()));
     }
 
     pub(crate) fn is_connected(&self, iri: &IriString) -> bool {
