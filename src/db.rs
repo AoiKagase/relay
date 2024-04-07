@@ -605,28 +605,30 @@ impl Db {
 
     pub(crate) async fn add_blocks(&self, domains: Vec<String>) -> Result<(), Error> {
         self.unblock(move |inner| {
-            let mut connected_batch = Batch::default();
-            let mut blocked_batch = Batch::default();
-            let mut allowed_batch = Batch::default();
-
-            for connected in inner.connected_by_domain(&domains) {
-                connected_batch.remove(connected.as_str().as_bytes());
-            }
-
-            for authority in &domains {
-                blocked_batch.insert(domain_key(authority), authority.as_bytes());
-                allowed_batch.remove(domain_key(authority));
-            }
-
             let res = (
                 &inner.connected_actor_ids,
                 &inner.blocked_domains,
                 &inner.allowed_domains,
             )
                 .transaction(|(connected, blocked, allowed)| {
-                    inner.connected_actor_ids.apply_batch(&connected_batch)?;
-                    inner.blocked_domains.apply_batch(&blocked_batch)?;
-                    inner.allowed_domains.apply_batch(&allowed_batch)?;
+                    let mut connected_batch = Batch::default();
+                    let mut blocked_batch = Batch::default();
+                    let mut allowed_batch = Batch::default();
+
+                    for connected in inner.connected_by_domain(&domains) {
+                        connected_batch.remove(connected.as_str().as_bytes());
+                    }
+
+                    for authority in &domains {
+                        blocked_batch
+                            .insert(domain_key(authority).as_bytes(), authority.as_bytes());
+                        allowed_batch.remove(domain_key(authority).as_bytes());
+                    }
+
+                    connected.apply_batch(&connected_batch)?;
+                    blocked.apply_batch(&blocked_batch)?;
+                    allowed.apply_batch(&allowed_batch)?;
+
                     Ok(())
                 });
 
@@ -651,7 +653,7 @@ impl Db {
             let mut blocked_batch = Batch::default();
 
             for authority in &domains {
-                blocked_batch.remove(domain_key(authority));
+                blocked_batch.remove(domain_key(authority).as_bytes());
             }
 
             inner.blocked_domains.apply_batch(blocked_batch)?;
@@ -669,7 +671,7 @@ impl Db {
             let mut allowed_batch = Batch::default();
 
             for authority in &domains {
-                allowed_batch.insert(domain_key(authority), authority.as_bytes());
+                allowed_batch.insert(domain_key(authority).as_bytes(), authority.as_bytes());
             }
 
             inner.allowed_domains.apply_batch(allowed_batch)?;
@@ -701,7 +703,7 @@ impl Db {
             let mut allowed_batch = Batch::default();
 
             for authority in &domains {
-                allowed_batch.remove(domain_key(authority));
+                allowed_batch.remove(domain_key(authority).as_bytes());
             }
 
             inner.allowed_domains.apply_batch(allowed_batch)?;

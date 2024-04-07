@@ -299,7 +299,7 @@ impl Inner {
                 .entry(labels)
                 .or_insert_with(Summary::with_defaults);
 
-            let h = histogram.get_inner().clear_with(|samples| {
+            histogram.get_inner().clear_with(|samples| {
                 for sample in samples {
                     entry.add(*sample);
                 }
@@ -311,8 +311,6 @@ impl Inner {
             }
 
             metrics::gauge!("relay.collector.distributions.size").set(recordable(total_len));
-
-            h
         }
 
         let d = self.distributions.read().unwrap().clone();
