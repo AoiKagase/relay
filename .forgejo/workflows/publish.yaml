@@ -207,6 +207,7 @@ jobs:
           direction: upload
           token: ${{ secrets.GITHUB_TOKEN }}
           release-dir: artifacts/
+          prerelease: true
 
   publish-crate:
     needs: [build]
