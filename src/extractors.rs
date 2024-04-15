@@ -163,6 +163,10 @@ impl XApiToken {
     pub(crate) fn new(token: String) -> Self {
         Self(token)
     }
+
+    pub(crate) const fn http1_name() -> reqwest::header::HeaderName {
+        reqwest::header::HeaderName::from_static("x-api-token")
+    }
 }
 
 impl Header for XApiToken {

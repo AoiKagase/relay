@@ -33,6 +33,7 @@ mod db;
 mod error;
 mod extractors;
 mod future;
+mod http1;
 mod jobs;
 mod middleware;
 mod requests;

@@ -23,10 +23,13 @@ pub(crate) async fn route(
             .fetch_response(&url, BreakerStrategy::Allow404AndBelow)
             .await?;
 
-        let mut response = HttpResponse::build(res.status());
+        let mut response = HttpResponse::build(crate::http1::status_to_http02(res.status()));
 
         for (name, value) in res.headers().iter().filter(|(h, _)| *h != "connection") {
-            response.insert_header((name.clone(), value.clone()));
+            response.insert_header((
+                crate::http1::name_to_http02(name),
+                crate::http1::value_to_http02(value),
+            ));
         }
 
         return Ok(response.body(BodyStream::new(limit_stream(
