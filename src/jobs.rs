@@ -40,7 +40,12 @@ fn debug_object(activity: &serde_json::Value) -> &serde_json::Value {
     object
 }
 
+pub(crate) fn build_storage() -> MetricsStorage<Storage<TokioTimer>> {
+    MetricsStorage::wrap(Storage::new(TokioTimer))
+}
+
 pub(crate) fn create_workers(
+    storage: MetricsStorage<Storage<TokioTimer>>,
     state: State,
     actors: ActorCache,
     media: MediaCache,
@@ -48,18 +53,15 @@ pub(crate) fn create_workers(
 ) -> std::io::Result<JobServer> {
     let deliver_concurrency = config.deliver_concurrency();
 
-    let queue_handle = WorkerConfig::new(
-        MetricsStorage::wrap(Storage::new(TokioTimer)),
-        move |queue_handle| {
-            JobState::new(
-                state.clone(),
-                actors.clone(),
-                JobServer::new(queue_handle),
-                media.clone(),
-                config.clone(),
-            )
-        },
-    )
+    let queue_handle = WorkerConfig::new(storage, move |queue_handle| {
+        JobState::new(
+            state.clone(),
+            actors.clone(),
+            JobServer::new(queue_handle),
+            media.clone(),
+            config.clone(),
+        )
+    })
     .register::<Deliver>()
     .register::<DeliverMany>()
     .register::<QueryNodeinfo>()

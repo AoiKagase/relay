@@ -321,10 +321,16 @@ async fn server_main(
     let sign_spawner2 = sign_spawner.clone();
     let verify_spawner2 = verify_spawner.clone();
     let config2 = config.clone();
+    let job_store = jobs::build_storage();
     let server = HttpServer::new(move || {
-        let job_server =
-            create_workers(state.clone(), actors.clone(), media.clone(), config.clone())
-                .expect("Failed to create job server");
+        let job_server = create_workers(
+            job_store.clone(),
+            state.clone(),
+            actors.clone(),
+            media.clone(),
+            config.clone(),
+        )
+        .expect("Failed to create job server");
 
         let app = App::new()
             .app_data(web::Data::new(db.clone()))

@@ -15,6 +15,10 @@ const MINUTES: u64 = 60 * SECONDS;
 const HOURS: u64 = 60 * MINUTES;
 const DAYS: u64 = 24 * HOURS;
 
+pub(crate) fn recordable(len: usize) -> u32 {
+    ((len as u64) % u64::from(u32::MAX)) as u32
+}
+
 type DistributionMap = BTreeMap<Vec<(String, String)>, Summary>;
 
 #[derive(Clone)]
@@ -299,7 +303,14 @@ impl Inner {
                 for sample in samples {
                     entry.add(*sample);
                 }
-            })
+            });
+
+            let mut total_len = 0;
+            for dist_map in d.values() {
+                total_len += dist_map.len();
+            }
+
+            metrics::gauge!("relay.collector.distributions.size").set(recordable(total_len));
         }
 
         let d = self.distributions.read().unwrap().clone();
@@ -358,6 +369,7 @@ impl MemoryCollector {
     ) {
         let mut d = self.inner.descriptions.write().unwrap();
         d.entry(key.as_str().to_owned()).or_insert(description);
+        metrics::gauge!("relay.collector.descriptions.size").set(recordable(d.len()));
     }
 
     pub(crate) fn install(&self) -> Result<(), SetRecorderError<Self>> {
