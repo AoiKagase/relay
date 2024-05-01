@@ -605,6 +605,8 @@ impl Db {
 
     pub(crate) async fn add_blocks(&self, domains: Vec<String>) -> Result<(), Error> {
         self.unblock(move |inner| {
+            let connected_by_domain = inner.connected_by_domain(&domains).collect::<Vec<_>>();
+
             let res = (
                 &inner.connected_actor_ids,
                 &inner.blocked_domains,
@@ -615,7 +617,7 @@ impl Db {
                     let mut blocked_batch = Batch::default();
                     let mut allowed_batch = Batch::default();
 
-                    for connected in inner.connected_by_domain(&domains) {
+                    for connected in &connected_by_domain {
                         connected_batch.remove(connected.as_str().as_bytes());
                     }
 
@@ -687,9 +689,11 @@ impl Db {
     pub(crate) async fn remove_allows(&self, domains: Vec<String>) -> Result<(), Error> {
         self.unblock(move |inner| {
             if inner.restricted_mode {
+                let connected_by_domain = inner.connected_by_domain(&domains).collect::<Vec<_>>();
+
                 let mut connected_batch = Batch::default();
 
-                for connected in inner.connected_by_domain(&domains) {
+                for connected in &connected_by_domain {
                     connected_batch.remove(connected.as_str().as_bytes());
                 }
 
