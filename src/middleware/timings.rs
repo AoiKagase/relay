@@ -80,7 +80,7 @@ where
     fn call(&self, req: ServiceRequest) -> Self::Future {
         let log_on_drop = LogOnDrop {
             begin: Instant::now(),
-            path: req.path().to_string(),
+            path: format!("{:?}", req.match_pattern()),
             method: req.method().to_string(),
             arm: false,
         };
