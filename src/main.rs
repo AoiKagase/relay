@@ -38,6 +38,7 @@ mod middleware;
 mod requests;
 mod routes;
 mod spawner;
+mod stream;
 mod telegram;
 
 use crate::config::UrlKind;

@@ -2,9 +2,13 @@ use crate::{
     data::MediaCache,
     error::Error,
     requests::{BreakerStrategy, Requests},
+    stream::limit_stream,
 };
 use actix_web::{body::BodyStream, web, HttpResponse};
 use uuid::Uuid;
+
+// 16 MB
+const IMAGE_SIZE_LIMIT: usize = 16 * 1024 * 1024;
 
 #[tracing::instrument(name = "Media", skip(media, requests))]
 pub(crate) async fn route(
@@ -25,7 +29,10 @@ pub(crate) async fn route(
             response.insert_header((name.clone(), value.clone()));
         }
 
-        return Ok(response.body(BodyStream::new(res.bytes_stream())));
+        return Ok(response.body(BodyStream::new(limit_stream(
+            res.bytes_stream(),
+            IMAGE_SIZE_LIMIT,
+        ))));
     }
 
     Ok(HttpResponse::NotFound().finish())

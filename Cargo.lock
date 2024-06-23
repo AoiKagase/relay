@@ -399,6 +399,7 @@ dependencies = [
  "console-subscriber",
  "dashmap",
  "dotenv",
+ "futures-core",
  "http-signature-normalization-actix",
  "http-signature-normalization-reqwest",
  "lru",
