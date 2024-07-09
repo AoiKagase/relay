@@ -233,7 +233,11 @@ impl Requests {
                 }
             }
 
-            return Err(ErrorKind::Status(parsed_url.to_string(), status).into());
+            return Err(ErrorKind::Status(
+                parsed_url.to_string(),
+                crate::http1::status_to_http02(status),
+            )
+            .into());
         }
 
         // only actually succeed a breaker on 2xx response
