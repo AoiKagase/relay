@@ -29,7 +29,7 @@ actix-webfinger = { version = "0.5.0", default-features = false }
 activitystreams = "0.7.0-alpha.25"
 activitystreams-ext = "0.1.0-alpha.3"
 ammonia = "4.0.0"
-async-cpupool = "0.2.2"
+async-cpupool = "0.3.0"
 bcrypt = "0.15"
 base64 = "0.22"
 clap = { version = "4.0.0", features = ["derive"] }
@@ -40,11 +40,11 @@ dashmap = "5.1.0"
 dotenv = "0.15.0"
 futures-core = "0.3.30"
 lru = "0.12.0"
-metrics = "0.22.0"
-metrics-exporter-prometheus = { version = "0.13.0", default-features = false, features = [
+metrics = "0.23.0"
+metrics-exporter-prometheus = { version = "0.15.0", default-features = false, features = [
   "http-listener",
 ] }
-metrics-util = "0.16.0"
+metrics-util = "0.17.0"
 mime = "0.3.16"
 minify-html = "0.15.0"
 opentelemetry = "0.22"
@@ -87,7 +87,7 @@ tokio = { version = "1", features = ["full", "tracing"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 
 [dependencies.background-jobs]
-version = "0.18.0"
+version = "0.19.0"
 default-features = false
 features = ["error-logging", "metrics", "tokio"]
 
