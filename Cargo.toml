@@ -24,7 +24,7 @@ default = []
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-actix-web = { version = "4.4.0", default-features = false, features = ["compress-brotli", "compress-gzip", "rustls-0_22"] }
+actix-web = { version = "4.4.0", default-features = false, features = ["compress-brotli", "compress-gzip", "rustls-0_23"] }
 actix-webfinger = { version = "0.5.0", default-features = false }
 activitystreams = "0.7.0-alpha.25"
 activitystreams-ext = "0.1.0-alpha.3"
@@ -54,14 +54,14 @@ pin-project-lite = "0.2.9"
 # pinned to metrics-util
 quanta = "0.12.0"
 rand = "0.8"
-reqwest = { version = "0.11", default-features = false, features = ["rustls-tls", "stream"]}
+reqwest = { version = "0.11", default-features = false, features = ["rustls-tls", "stream"] }
 reqwest-middleware = "0.2"
 reqwest-tracing = "0.4.5"
 ring = "0.17.5"
 rsa = "0.9"
 rsa-magic-public-key = "0.8.0"
-rustls = "0.22.0"
-rustls-channel-resolver = "0.2.0"
+rustls = { version = "0.23.0", default-features = false, features = ["ring", "logging", "std", "tls12"] }
+rustls-channel-resolver = "0.3.0"
 rustls-pemfile = "2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

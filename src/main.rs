@@ -418,7 +418,7 @@ async fn server_main(
             .with_no_client_auth()
             .with_cert_resolver(cert_rx);
         server
-            .bind_rustls_0_22(bind_address, server_config)?
+            .bind_rustls_0_23(bind_address, server_config)?
             .run()
             .await?;
 
