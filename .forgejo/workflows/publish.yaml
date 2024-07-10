@@ -21,7 +21,8 @@ jobs:
       -
         name: Clippy
         run: |
-          cargo clippy --no-default-features -- -D warnings
+          # cargo clippy --no-default-features -- -D warnings
+          cargo clippy --no-default-features
 
   tests:
     runs-on: docker

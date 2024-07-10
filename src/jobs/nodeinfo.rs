@@ -156,7 +156,7 @@ struct Link {
 #[serde(untagged)]
 enum MaybeSupported<T> {
     Supported(T),
-    Unsupported(String),
+    Unsupported(#[allow(unused)] String),
 }
 
 impl<T> MaybeSupported<T> {
@@ -165,8 +165,8 @@ impl<T> MaybeSupported<T> {
     }
 }
 
-struct SupportedVersion(String);
-struct SupportedNodeinfo(String);
+struct SupportedVersion(#[allow(unused)] String);
+struct SupportedNodeinfo(#[allow(unused)] String);
 
 static SUPPORTED_VERSIONS: &str = "2.";
 static SUPPORTED_NODEINFO: &str = "http://nodeinfo.diaspora.software/ns/schema/2.";

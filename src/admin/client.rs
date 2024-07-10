@@ -5,7 +5,6 @@ use crate::{
     error::{Error, ErrorKind},
     extractors::XApiToken,
 };
-use actix_web::http::header::Header;
 use reqwest_middleware::ClientWithMiddleware;
 use serde::de::DeserializeOwned;
 
@@ -87,13 +86,17 @@ async fn get_results<T: DeserializeOwned>(
 
     let res = client
         .get(iri.as_str())
-        .header(XApiToken::name(), x_api_token.to_string())
+        .header(XApiToken::http1_name(), x_api_token.to_string())
         .send()
         .await
         .map_err(|e| ErrorKind::SendRequest(iri.to_string(), e.to_string()))?;
 
     if !res.status().is_success() {
-        return Err(ErrorKind::Status(iri.to_string(), res.status()).into());
+        return Err(ErrorKind::Status(
+            iri.to_string(),
+            crate::http1::status_to_http02(res.status()),
+        )
+        .into());
     }
 
     let t = res
@@ -116,7 +119,7 @@ async fn post_domains(
 
     let res = client
         .post(iri.as_str())
-        .header(XApiToken::name(), x_api_token.to_string())
+        .header(XApiToken::http1_name(), x_api_token.to_string())
         .json(&Domains { domains })
         .send()
         .await

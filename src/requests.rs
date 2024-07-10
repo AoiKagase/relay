@@ -2,6 +2,7 @@ use crate::{
     data::LastOnline,
     error::{Error, ErrorKind},
     spawner::Spawner,
+    stream::{aggregate, limit_stream},
 };
 use activitystreams::iri_string::types::IriString;
 use actix_web::http::header::Date;
@@ -23,6 +24,9 @@ const ONE_SECOND: u64 = 1;
 const ONE_MINUTE: u64 = 60 * ONE_SECOND;
 const ONE_HOUR: u64 = 60 * ONE_MINUTE;
 const ONE_DAY: u64 = 24 * ONE_HOUR;
+
+// 20 KB
+const JSON_SIZE_LIMIT: usize = 20 * 1024;
 
 #[derive(Debug)]
 pub(crate) enum BreakerStrategy {
@@ -229,7 +233,11 @@ impl Requests {
                 }
             }
 
-            return Err(ErrorKind::Status(parsed_url.to_string(), status).into());
+            return Err(ErrorKind::Status(
+                parsed_url.to_string(),
+                crate::http1::status_to_http02(status),
+            )
+            .into());
         }
 
         // only actually succeed a breaker on 2xx response
@@ -262,7 +270,7 @@ impl Requests {
     where
         T: serde::de::DeserializeOwned,
     {
-        let body = self
+        let stream = self
             .do_deliver(
                 url,
                 &serde_json::json!({}),
@@ -271,8 +279,9 @@ impl Requests {
                 strategy,
             )
             .await?
-            .bytes()
-            .await?;
+            .bytes_stream();
+
+        let body = aggregate(limit_stream(stream, JSON_SIZE_LIMIT)).await?;
 
         Ok(serde_json::from_slice(&body)?)
     }
@@ -299,11 +308,12 @@ impl Requests {
     where
         T: serde::de::DeserializeOwned,
     {
-        let body = self
+        let stream = self
             .do_fetch_response(url, accept, strategy)
             .await?
-            .bytes()
-            .await?;
+            .bytes_stream();
+
+        let body = aggregate(limit_stream(stream, JSON_SIZE_LIMIT)).await?;
 
         Ok(serde_json::from_slice(&body)?)
     }

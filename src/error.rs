@@ -123,6 +123,9 @@ pub(crate) enum ErrorKind {
     #[error("Couldn't sign request")]
     SignRequest,
 
+    #[error("Response body from server exceeded limits")]
+    BodyTooLarge,
+
     #[error("Couldn't make request")]
     Reqwest(#[from] reqwest::Error),
 
