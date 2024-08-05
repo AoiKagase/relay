@@ -12,7 +12,7 @@ use error::Error;
 use http_signature_normalization_actix::middleware::VerifySignature;
 use metrics_exporter_prometheus::PrometheusBuilder;
 use metrics_util::layers::FanoutBuilder;
-use opentelemetry::KeyValue;
+use opentelemetry::{trace::TracerProvider, KeyValue};
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::Resource;
 use reqwest_middleware::ClientWithMiddleware;
@@ -83,13 +83,11 @@ fn init_subscriber(
     let subscriber = subscriber.with(console_layer);
 
     if let Some(url) = opentelemetry_url {
-        let tracer = opentelemetry_otlp::new_pipeline()
+        let tracer_provider = opentelemetry_otlp::new_pipeline()
             .tracing()
-            .with_trace_config(
-                opentelemetry_sdk::trace::config().with_resource(Resource::new(vec![
-                    KeyValue::new("service.name", software_name),
-                ])),
-            )
+            .with_trace_config(opentelemetry_sdk::trace::Config::default().with_resource(
+                Resource::new(vec![KeyValue::new("service.name", software_name)]),
+            ))
             .with_exporter(
                 opentelemetry_otlp::new_exporter()
                     .tonic()
@@ -98,7 +96,7 @@ fn init_subscriber(
             .install_batch(opentelemetry_sdk::runtime::Tokio)?;
 
         let otel_layer = tracing_opentelemetry::layer()
-            .with_tracer(tracer)
+            .with_tracer(tracer_provider.tracer(software_name))
             .with_filter(targets);
 
         let subscriber = subscriber.with(otel_layer);
