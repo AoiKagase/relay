@@ -35,7 +35,7 @@ base64 = "0.22"
 clap = { version = "4.0.0", features = ["derive"] }
 color-eyre = "0.6.2"
 config = { version = "0.14.0", default-features = false, features = ["toml", "json", "yaml"] }
-console-subscriber = { version = "0.3", optional = true }
+console-subscriber = { version = "0.4", optional = true }
 dashmap = "6.0.1"
 dotenv = "0.15.0"
 futures-core = "0.3.30"
@@ -47,9 +47,9 @@ metrics-exporter-prometheus = { version = "0.15.0", default-features = false, fe
 metrics-util = "0.17.0"
 mime = "0.3.16"
 minify-html = "0.15.0"
-opentelemetry = "0.23"
-opentelemetry_sdk = { version = "0.23", features = ["rt-tokio"] }
-opentelemetry-otlp = "0.16"
+opentelemetry = "0.24"
+opentelemetry_sdk = { version = "0.24", features = ["rt-tokio"] }
+opentelemetry-otlp = "0.17"
 pin-project-lite = "0.2.9"
 # pinned to metrics-util
 quanta = "0.12.0"
@@ -77,7 +77,7 @@ time = { version = "0.3.17", features = ["serde"] }
 tracing = "0.1"
 tracing-error = "0.2"
 tracing-log = "0.2"
-tracing-opentelemetry = "0.24"
+tracing-opentelemetry = "0.25"
 tracing-subscriber = { version = "0.3", features = [
   "ansi",
   "env-filter",
