@@ -55,7 +55,7 @@ pin-project-lite = "0.2.9"
 quanta = "0.12.0"
 rand = "0.8"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream"]}
-reqwest-middleware = { version = "0.3", default-features = false, features = ["json"] }
+reqwest-middleware = { version = "0.4", default-features = false, features = ["json"] }
 reqwest-tracing = "0.5.0"
 ring = "0.17.5"
 rsa = "0.9"
@@ -97,7 +97,7 @@ default-features = false
 features = ["server", "ring"]
 
 [dependencies.http-signature-normalization-reqwest]
-version = "0.12.0"
+version = "0.13.0"
 default-features = false
 features = ["middleware", "ring"]
 
