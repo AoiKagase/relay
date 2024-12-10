@@ -30,7 +30,7 @@ activitystreams = "0.7.0-alpha.25"
 activitystreams-ext = "0.1.0-alpha.3"
 ammonia = "4.0.0"
 async-cpupool = "0.3.0"
-bcrypt = "0.15"
+bcrypt = "0.16"
 base64 = "0.22"
 clap = { version = "4.0.0", features = ["derive"] }
 color-eyre = "0.6.2"
