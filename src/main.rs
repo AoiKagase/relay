@@ -83,17 +83,18 @@ fn init_subscriber(
     let subscriber = subscriber.with(console_layer);
 
     if let Some(url) = opentelemetry_url {
-        let tracer_provider = opentelemetry_otlp::new_pipeline()
-            .tracing()
-            .with_trace_config(opentelemetry_sdk::trace::Config::default().with_resource(
-                Resource::new(vec![KeyValue::new("service.name", software_name)]),
-            ))
-            .with_exporter(
-                opentelemetry_otlp::new_exporter()
-                    .tonic()
-                    .with_endpoint(url.as_str()),
-            )
-            .install_batch(opentelemetry_sdk::runtime::Tokio)?;
+        let exporter = opentelemetry_otlp::SpanExporter::builder()
+            .with_tonic()
+            .with_endpoint(url.as_str())
+            .build()?;
+
+        let tracer_provider = opentelemetry_sdk::trace::TracerProvider::builder()
+            .with_resource(Resource::new(vec![KeyValue::new(
+                "service.name",
+                software_name,
+            )]))
+            .with_batch_exporter(exporter, opentelemetry_sdk::runtime::Tokio)
+            .build();
 
         let otel_layer = tracing_opentelemetry::layer()
             .with_tracer(tracer_provider.tracer(software_name))
