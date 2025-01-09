@@ -1,7 +1,7 @@
 [package]
 name = "ap-relay"
 description = "A simple activitypub relay"
-version = "0.3.115"
+version = "0.3.116"
 authors = ["asonix <asonix@asonix.dog>"]
 license = "AGPL-3.0"
 readme = "README.md"
@@ -30,7 +30,7 @@ activitystreams = "0.7.0-alpha.25"
 activitystreams-ext = "0.1.0-alpha.3"
 ammonia = "4.0.0"
 async-cpupool = "0.3.0"
-bcrypt = "0.15"
+bcrypt = "0.16"
 base64 = "0.22"
 clap = { version = "4.0.0", features = ["derive"] }
 color-eyre = "0.6.2"
@@ -47,15 +47,15 @@ metrics-exporter-prometheus = { version = "0.15.0", default-features = false, fe
 metrics-util = "0.17.0"
 mime = "0.3.16"
 minify-html = "0.15.0"
-opentelemetry = "0.24"
-opentelemetry_sdk = { version = "0.24", features = ["rt-tokio"] }
-opentelemetry-otlp = "0.17"
+opentelemetry = "0.27.1"
+opentelemetry_sdk = { version = "0.27", features = ["rt-tokio"] }
+opentelemetry-otlp = { version = "0.27", features = ["grpc-tonic"] }
 pin-project-lite = "0.2.9"
 # pinned to metrics-util
 quanta = "0.12.0"
 rand = "0.8"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream"]}
-reqwest-middleware = { version = "0.3", default-features = false, features = ["json"] }
+reqwest-middleware = { version = "0.4", default-features = false, features = ["json"] }
 reqwest-tracing = "0.5.0"
 ring = "0.17.5"
 rsa = "0.9"
@@ -67,17 +67,17 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 sled = "0.34.7"
 streem = "0.2.0"
-teloxide = { version = "0.12.0", default-features = false, features = [
+teloxide = { version = "0.13.0", default-features = false, features = [
   "ctrlc_handler",
   "macros",
   "rustls",
 ] }
-thiserror = "1.0"
+thiserror = "2.0"
 time = { version = "0.3.17", features = ["serde"] }
 tracing = "0.1"
 tracing-error = "0.2"
 tracing-log = "0.2"
-tracing-opentelemetry = "0.25"
+tracing-opentelemetry = "0.28"
 tracing-subscriber = { version = "0.3", features = [
   "ansi",
   "env-filter",
@@ -97,7 +97,7 @@ default-features = false
 features = ["server", "ring"]
 
 [dependencies.http-signature-normalization-reqwest]
-version = "0.12.0"
+version = "0.13.0"
 default-features = false
 features = ["middleware", "ring"]
 

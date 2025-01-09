@@ -75,7 +75,8 @@ pub(crate) fn start(admin_handle: String, db: Db, token: &str) {
 
 fn is_admin(admin_handle: &str, message: &Message) -> bool {
     message
-        .from()
+        .from
+        .as_ref()
         .and_then(|user| user.username.as_deref())
         .map(|username| username == admin_handle)
         .unwrap_or(false)
