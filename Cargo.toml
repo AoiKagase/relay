@@ -33,7 +33,7 @@ bcrypt = "0.17"
 base64 = "0.22"
 clap = { version = "4.0.0", features = ["derive"] }
 color-eyre = "0.6.2"
-config = { version = "0.14.0", default-features = false, features = ["toml", "json", "yaml"] }
+config = { version = "0.15.0", default-features = false, features = ["toml", "json", "yaml"] }
 console-subscriber = { version = "0.4", optional = true }
 dashmap = "6.0.1"
 dotenv = "0.15.0"
