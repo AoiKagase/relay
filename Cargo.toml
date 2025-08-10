@@ -46,9 +46,9 @@ metrics-exporter-prometheus = { version = "0.15.0", default-features = false, fe
 metrics-util = "0.17.0"
 mime = "0.3.16"
 minify-html = "0.16.0"
-opentelemetry = "0.27.1"
-opentelemetry_sdk = { version = "0.27", features = ["rt-tokio"] }
-opentelemetry-otlp = { version = "0.27", features = ["grpc-tonic"] }
+opentelemetry = "0.30.0"
+opentelemetry_sdk = { version = "0.30", features = ["rt-tokio"] }
+opentelemetry-otlp = { version = "0.30", features = ["grpc-tonic"] }
 pin-project-lite = "0.2.9"
 # pinned to metrics-util
 quanta = "0.12.0"
@@ -76,7 +76,7 @@ time = { version = "0.3.17", features = ["serde"] }
 tracing = "0.1"
 tracing-error = "0.2"
 tracing-log = "0.2"
-tracing-opentelemetry = "0.28"
+tracing-opentelemetry = "0.31"
 tracing-subscriber = { version = "0.3", features = [
   "ansi",
   "env-filter",
