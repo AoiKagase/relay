@@ -8,18 +8,19 @@ use rand::{seq::SliceRandom, thread_rng};
 use std::io::BufWriter;
 
 const MINIFY_CONFIG: minify_html::Cfg = minify_html::Cfg {
-    do_not_minify_doctype: true,
-    ensure_spec_compliant_unquoted_attribute_values: true,
+    allow_noncompliant_unquoted_attribute_values: false,
+    allow_optimal_entities: false,
+    allow_removing_spaces_between_attributes: false,
     keep_closing_tags: true,
-    keep_html_and_head_opening_tags: false,
-    keep_spaces_between_attributes: true,
     keep_comments: false,
+    keep_html_and_head_opening_tags: false,
     keep_input_type_text_attr: true,
     keep_ssi_comments: false,
-    preserve_brace_template_syntax: false,
-    preserve_chevron_percent_template_syntax: false,
+    minify_doctype: false,
     minify_css: true,
     minify_js: true,
+    preserve_brace_template_syntax: false,
+    preserve_chevron_percent_template_syntax: false,
     remove_bangs: true,
     remove_processing_instructions: true,
 };
