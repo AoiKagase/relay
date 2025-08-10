@@ -50,8 +50,8 @@ use self::{
     data::{ActorCache, MediaCache, State},
     db::Db,
     jobs::create_workers,
-    middleware::{DebugPayload, MyVerify, RelayResolver, Timings},
-    routes::{actor, healthz, inbox, index, nodeinfo, nodeinfo_meta, statics},
+    middleware::{DebugPayload, MyVerify, Timings},
+    routes::{actor, healthz, inbox, index, nodeinfo, nodeinfo_meta, statics, webfinger},
     spawner::Spawner,
 };
 
@@ -377,7 +377,7 @@ async fn server_main(
             .service(web::resource("/nodeinfo/2.0.json").route(web::get().to(nodeinfo)))
             .service(
                 web::scope("/.well-known")
-                    .service(actix_webfinger::scoped::<RelayResolver>())
+                    .service(web::resource("/webfinger").route(web::get().to(webfinger)))
                     .service(web::resource("/nodeinfo").route(web::get().to(nodeinfo_meta))),
             )
             .service(web::resource("/static/{filename}").route(web::get().to(statics)))

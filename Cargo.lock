@@ -225,19 +225,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "actix-webfinger"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74a22b44deff50693521b489885151fd65a2a596f7aef6d8c0753485b8915082"
-dependencies = [
- "actix-rt",
- "actix-web",
- "serde",
- "serde_derive",
- "thiserror 1.0.69",
-]
-
-[[package]]
 name = "addr2line"
 version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -396,7 +383,6 @@ dependencies = [
  "activitystreams",
  "activitystreams-ext",
  "actix-web",
- "actix-webfinger",
  "ammonia",
  "async-cpupool",
  "background-jobs",
@@ -448,6 +434,7 @@ dependencies = [
  "tracing-log",
  "tracing-opentelemetry",
  "tracing-subscriber",
+ "url",
  "uuid",
 ]
 

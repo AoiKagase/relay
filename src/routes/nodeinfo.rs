@@ -3,17 +3,15 @@ use crate::{
     data::State,
 };
 use actix_web::{web, Responder};
-use actix_webfinger::Link;
+use serde_json::Value;
 
 #[tracing::instrument(name = "Well Known NodeInfo", skip(config))]
 pub(crate) async fn well_known(config: web::Data<Config>) -> impl Responder {
     web::Json(Links {
-        links: vec![Link {
-            rel: "http://nodeinfo.diaspora.software/ns/schema/2.0".to_owned(),
-            href: Some(config.generate_url(UrlKind::NodeInfo).to_string()),
-            template: None,
-            kind: None,
-        }],
+        links: [serde_json::json!({
+            "rel": "http://nodeinfo.diaspora.software/ns/schema/2.0",
+            "href": config.generate_url(UrlKind::NodeInfo),
+        })],
     })
     .customize()
     .insert_header(("Content-Type", "application/jrd+json"))
@@ -21,7 +19,7 @@ pub(crate) async fn well_known(config: web::Data<Config>) -> impl Responder {
 
 #[derive(serde::Serialize)]
 struct Links {
-    links: Vec<Link>,
+    links: [Value; 1],
 }
 
 #[tracing::instrument(name = "NodeInfo", skip_all)]
