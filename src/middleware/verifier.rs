@@ -28,7 +28,7 @@ impl MyVerify {
         // receiving an activity from a domain indicates it is probably online
         self.0.reset_breaker(&public_key_id);
 
-        let actor_id = if let Some(mut actor_id) = self
+        let actor_id = if let Some(actor_id) = self
             .2
             .db
             .actor_id_from_public_key_id(public_key_id.clone())
@@ -38,8 +38,18 @@ impl MyVerify {
                 return Err(ErrorKind::NotAllowed(key_id).into());
             }
 
-            actor_id.set_fragment(None);
-            let actor = self.1.get(&actor_id, &self.0).await?;
+            // Try with fully qualified URI first (including fragment), then fallback to fragment-stripped URI
+            let actor_with_fragment = actor_id.clone();
+            let mut actor_without_fragment = actor_id.clone();
+            actor_without_fragment.set_fragment(None);
+
+            let actor = match self.1.get(&actor_with_fragment, &self.0).await {
+                Ok(actor) => actor,
+                Err(_) => {
+                    // Fallback to fragment-stripped URI for backward compatibility
+                    self.1.get(&actor_without_fragment, &self.0).await?
+                }
+            };
             let was_cached = actor.is_cached();
             let actor = actor.into_inner();
 
@@ -90,7 +100,18 @@ impl MyVerify {
         // Previously we verified the sig from an actor's local cache
         //
         // Now we make sure we fetch an updated actor
-        let actor = self.1.get_no_cache(&actor_id, &self.0).await?;
+        // Try with fully qualified URI first (including fragment), then fallback to fragment-stripped URI
+        let actor_with_fragment = actor_id.clone();
+        let mut actor_without_fragment = actor_id.clone();
+        actor_without_fragment.set_fragment(None);
+
+        let actor = match self.1.get_no_cache(&actor_with_fragment, &self.0).await {
+            Ok(actor) => actor,
+            Err(_) => {
+                // Fallback to fragment-stripped URI for backward compatibility
+                self.1.get_no_cache(&actor_without_fragment, &self.0).await?
+            }
+        };
 
         do_verify(&self.3, &actor.public_key, signature, signing_string).await?;
 
