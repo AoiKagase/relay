@@ -72,12 +72,14 @@ impl WebfingerResource {
             return Err(ErrorKind::MissingAccept);
         };
 
-        let accept = accept.to_str().map_err(|_| ErrorKind::InvalidAccept)?;
-        let accept = accept
-            .parse::<mime::Mime>()
-            .map_err(|_| ErrorKind::InvalidAccept)?;
+        let accept_value = accept.to_str().map_err(|_| ErrorKind::InvalidAccept)?;
 
-        if !is_supported_json(&accept) {
+        let acceptable = accept_value
+            .split(", ")
+            .filter_map(|accept| accept.trim().parse::<mime::Mime>().ok())
+            .any(|accept| is_supported_json(&accept));
+
+        if !acceptable {
             return Err(ErrorKind::InvalidAccept);
         }
 
