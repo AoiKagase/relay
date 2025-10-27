@@ -5,6 +5,7 @@ mod index;
 mod media;
 mod nodeinfo;
 mod statics;
+mod webfinger;
 
 pub(crate) use self::{
     actor::route as actor,
@@ -14,6 +15,7 @@ pub(crate) use self::{
     media::route as media,
     nodeinfo::{route as nodeinfo, well_known as nodeinfo_meta},
     statics::route as statics,
+    webfinger::resolve as webfinger,
 };
 
 use actix_web::HttpResponse;

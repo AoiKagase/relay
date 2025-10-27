@@ -12,9 +12,9 @@ use error::Error;
 use http_signature_normalization_actix::middleware::VerifySignature;
 use metrics_exporter_prometheus::PrometheusBuilder;
 use metrics_util::layers::FanoutBuilder;
-use opentelemetry::{trace::TracerProvider, KeyValue};
+use opentelemetry::trace::TracerProvider;
 use opentelemetry_otlp::WithExportConfig;
-use opentelemetry_sdk::Resource;
+use opentelemetry_sdk::{trace::SdkTracerProvider, Resource};
 use reqwest_middleware::ClientWithMiddleware;
 use rustls::ServerConfig;
 use tokio::task::JoinHandle;
@@ -50,8 +50,8 @@ use self::{
     data::{ActorCache, MediaCache, State},
     db::Db,
     jobs::create_workers,
-    middleware::{DebugPayload, MyVerify, RelayResolver, Timings},
-    routes::{actor, healthz, inbox, index, nodeinfo, nodeinfo_meta, statics},
+    middleware::{DebugPayload, MyVerify, Timings},
+    routes::{actor, healthz, inbox, index, nodeinfo, nodeinfo_meta, statics, webfinger},
     spawner::Spawner,
 };
 
@@ -88,12 +88,9 @@ fn init_subscriber(
             .with_endpoint(url.as_str())
             .build()?;
 
-        let tracer_provider = opentelemetry_sdk::trace::TracerProvider::builder()
-            .with_resource(Resource::new(vec![KeyValue::new(
-                "service.name",
-                software_name,
-            )]))
-            .with_batch_exporter(exporter, opentelemetry_sdk::runtime::Tokio)
+        let tracer_provider = SdkTracerProvider::builder()
+            .with_resource(Resource::builder().with_service_name(software_name).build())
+            .with_batch_exporter(exporter)
             .build();
 
         let otel_layer = tracing_opentelemetry::layer()
@@ -377,7 +374,7 @@ async fn server_main(
             .service(web::resource("/nodeinfo/2.0.json").route(web::get().to(nodeinfo)))
             .service(
                 web::scope("/.well-known")
-                    .service(actix_webfinger::scoped::<RelayResolver>())
+                    .service(web::resource("/webfinger").route(web::get().to(webfinger)))
                     .service(web::resource("/nodeinfo").route(web::get().to(nodeinfo_meta))),
             )
             .service(web::resource("/static/{filename}").route(web::get().to(statics)))

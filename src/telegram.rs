@@ -107,17 +107,23 @@ async fn answer(bot: Bot, msg: Message, cmd: Command, db: Db) -> ResponseResult<
         }
         Command::ListAllowed => {
             if let Ok(allowed) = db.allows().await {
-                bot.send_message(msg.chat.id, allowed.join("\n")).await?;
+                for chunk in allowed.chunks(50) {
+                    bot.send_message(msg.chat.id, chunk.join("\n")).await?;
+                }
             }
         }
         Command::ListBlocks => {
             if let Ok(blocks) = db.blocks().await {
-                bot.send_message(msg.chat.id, blocks.join("\n")).await?;
+                for chunk in blocks.chunks(50) {
+                    bot.send_message(msg.chat.id, chunk.join("\n")).await?;
+                }
             }
         }
         Command::ListConnected => {
             if let Ok(connected) = db.connected_ids().await {
-                bot.send_message(msg.chat.id, connected.join("\n")).await?;
+                for chunk in connected.chunks(50) {
+                    bot.send_message(msg.chat.id, chunk.join("\n")).await?;
+                }
             }
         }
         _ => {

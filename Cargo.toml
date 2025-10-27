@@ -1,7 +1,7 @@
 [package]
 name = "ap-relay"
 description = "A simple activitypub relay"
-version = "0.3.116"
+version = "0.3.119"
 authors = ["asonix <asonix@asonix.dog>"]
 license = "AGPL-3.0"
 readme = "README.md"
@@ -25,31 +25,30 @@ default = []
 
 [dependencies]
 actix-web = { version = "4.4.0", default-features = false, features = ["compress-brotli", "compress-gzip", "rustls-0_23"] }
-actix-webfinger = { version = "0.5.0", default-features = false }
 activitystreams = "0.7.0-alpha.25"
 activitystreams-ext = "0.1.0-alpha.3"
 ammonia = "4.0.0"
 async-cpupool = "0.3.0"
-bcrypt = "0.16"
+bcrypt = "0.17"
 base64 = "0.22"
 clap = { version = "4.0.0", features = ["derive"] }
 color-eyre = "0.6.2"
-config = { version = "0.14.0", default-features = false, features = ["toml", "json", "yaml"] }
+config = { version = "0.15.0", default-features = false, features = ["toml", "json", "yaml"] }
 console-subscriber = { version = "0.4", optional = true }
 dashmap = "6.0.1"
 dotenv = "0.15.0"
 futures-core = "0.3.30"
-lru = "0.12.0"
+lru = "0.16.0"
 metrics = "0.23.0"
 metrics-exporter-prometheus = { version = "0.15.0", default-features = false, features = [
   "http-listener",
 ] }
 metrics-util = "0.17.0"
 mime = "0.3.16"
-minify-html = "0.15.0"
-opentelemetry = "0.27.1"
-opentelemetry_sdk = { version = "0.27", features = ["rt-tokio"] }
-opentelemetry-otlp = { version = "0.27", features = ["grpc-tonic"] }
+minify-html = "0.16.0"
+opentelemetry = "0.31.0"
+opentelemetry_sdk = { version = "0.31", features = ["rt-tokio"] }
+opentelemetry-otlp = { version = "0.31", features = ["grpc-tonic"] }
 pin-project-lite = "0.2.9"
 # pinned to metrics-util
 quanta = "0.12.0"
@@ -67,7 +66,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 sled = "0.34.7"
 streem = "0.2.0"
-teloxide = { version = "0.13.0", default-features = false, features = [
+teloxide = { version = "0.17.0", default-features = false, features = [
   "ctrlc_handler",
   "macros",
   "rustls",
@@ -77,13 +76,14 @@ time = { version = "0.3.17", features = ["serde"] }
 tracing = "0.1"
 tracing-error = "0.2"
 tracing-log = "0.2"
-tracing-opentelemetry = "0.28"
+tracing-opentelemetry = "0.32"
 tracing-subscriber = { version = "0.3", features = [
   "ansi",
   "env-filter",
   "fmt",
 ] }
 tokio = { version = "1", features = ["full", "tracing"] }
+url = { version = "2.5.4", features = ["serde"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 
 [dependencies.background-jobs]
@@ -107,8 +107,8 @@ version = "0.7.9"
 [build-dependencies]
 color-eyre = "0.6.2"
 dotenv = "0.15.0"
-ructe = { version = "0.17.0", features = ["sass", "mime03"] }
-toml = "0.8.0"
+ructe = { version = "0.18.0", features = ["sass", "mime03"] }
+toml = "0.9.0"
 
 [profile.dev.package.rsa]
 opt-level = 3
