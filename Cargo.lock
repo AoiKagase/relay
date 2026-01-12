@@ -1860,8 +1860,7 @@ dependencies = [
 [[package]]
 name = "http-signature-normalization"
 version = "0.7.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b95e3149194de5f3f9d5225bcc6a8677979f8ff8ce39c85654730ad4824f101e"
+source = "git+https://git.asonix.dog/asonix/http-signature-normalization#a63116b5e9b44cb32250a461e2c01b9425ce329e"
 dependencies = [
  "httpdate",
 ]
@@ -1869,8 +1868,7 @@ dependencies = [
 [[package]]
 name = "http-signature-normalization-actix"
 version = "0.11.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44ea11b9048dc1400f0579c48e50caf4424089d6cf978180705370ec3fe78f10"
+source = "git+https://git.asonix.dog/asonix/http-signature-normalization#a63116b5e9b44cb32250a461e2c01b9425ce329e"
 dependencies = [
  "actix-http",
  "actix-rt",
@@ -1880,7 +1878,6 @@ dependencies = [
  "http-signature-normalization",
  "ring",
  "streem",
- "thiserror 1.0.69",
  "tokio",
  "tracing",
  "tracing-error",
@@ -1890,8 +1887,7 @@ dependencies = [
 [[package]]
 name = "http-signature-normalization-reqwest"
 version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "197ac5cd7566192622880036a275e7699c84eb0dabf558b96f9162f49d15a7a4"
+source = "git+https://git.asonix.dog/asonix/http-signature-normalization#a63116b5e9b44cb32250a461e2c01b9425ce329e"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -1900,7 +1896,6 @@ dependencies = [
  "reqwest 0.13.1",
  "reqwest-middleware",
  "ring",
- "thiserror 2.0.17",
 ]
 
 [[package]]
@@ -4078,13 +4073,11 @@ dependencies = [
 [[package]]
 name = "rsa-magic-public-key"
 version = "0.8.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "88ca6a6947c6fe6454c93c3bb65b92f9680e6f9e906e75e30631110f2227344c"
+source = "git+https://git.asonix.dog/asonix/rsa-magic-public-key#463118047149d4ac2886a48724562e335592e31e"
 dependencies = [
- "base64 0.21.7",
+ "base64 0.22.1",
  "num-bigint-dig",
  "rsa",
- "thiserror 1.0.69",
 ]
 
 [[package]]

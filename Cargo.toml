@@ -58,7 +58,7 @@ reqwest-middleware = { version = "0.5", default-features = false, features = ["j
 reqwest-tracing = "0.6.0"
 ring = "0.17.5"
 rsa = "0.9"
-rsa-magic-public-key = "0.8.0"
+rsa-magic-public-key = { version = "0.8.0", git = "https://git.asonix.dog/asonix/rsa-magic-public-key" }
 rustls = { version = "0.23.0", default-features = false, features = ["ring", "logging", "std", "tls12"] }
 rustls-channel-resolver = "0.3.0"
 rustls-pemfile = "2"
@@ -96,11 +96,13 @@ git = "https://git.asonix.dog/asonix/background-jobs"
 version = "0.11.1"
 default-features = false
 features = ["server", "ring"]
+git = "https://git.asonix.dog/asonix/http-signature-normalization"
 
 [dependencies.http-signature-normalization-reqwest]
 version = "0.14.0"
 default-features = false
 features = ["middleware", "ring"]
+git = "https://git.asonix.dog/asonix/http-signature-normalization"
 
 [dependencies.tracing-actix-web]
 version = "0.7.9"
