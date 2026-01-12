@@ -1,7 +1,8 @@
 use metrics::{Key, Metadata, Recorder, SetRecorderError};
 use metrics_util::{
     registry::{AtomicStorage, GenerationalStorage, Recency, Registry},
-    MetricKindMask, Summary,
+    storage::Summary,
+    MetricKindMask,
 };
 use quanta::Clock;
 use std::{

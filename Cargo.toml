@@ -28,7 +28,7 @@ actix-web = { version = "4.4.0", default-features = false, features = ["compress
 activitystreams = "0.7.0-alpha.25"
 activitystreams-ext = "0.1.0-alpha.3"
 ammonia = "4.0.0"
-async-cpupool = "0.3.0"
+async-cpupool = { version = "0.3.0", git = "https://git.asonix.dog/safe-async/async-cpupool" }
 bcrypt = "0.18"
 base64 = "0.22"
 clap = { version = "4.0.0", features = ["derive"] }
@@ -39,11 +39,11 @@ dashmap = "6.0.1"
 dotenv = "0.15.0"
 futures-core = "0.3.30"
 lru = "0.16.0"
-metrics = "0.23.0"
-metrics-exporter-prometheus = { version = "0.15.0", default-features = false, features = [
+metrics = "0.24.0"
+metrics-exporter-prometheus = { version = "0.18", default-features = false, features = [
   "http-listener",
 ] }
-metrics-util = "0.17.0"
+metrics-util = "0.20.0"
 mime = "0.3.16"
 minify-html = "0.18"
 opentelemetry = "0.31.0"
@@ -87,9 +87,10 @@ url = { version = "2.5.4", features = ["serde"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 
 [dependencies.background-jobs]
-version = "0.19.0"
+version = "0.20.0"
 default-features = false
 features = ["error-logging", "metrics", "tokio"]
+git = "https://git.asonix.dog/asonix/background-jobs"
 
 [dependencies.http-signature-normalization-actix]
 version = "0.11.1"
