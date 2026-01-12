@@ -111,7 +111,9 @@ fn build_client(
     timeout_seconds: u64,
     proxy: Option<(&IriString, Option<(&str, &str)>)>,
 ) -> Result<ClientWithMiddleware, Error> {
-    let builder = reqwest::Client::builder().user_agent(user_agent.to_string());
+    let builder = reqwest::Client::builder()
+        .user_agent(user_agent.to_string())
+        .tls_backend_rustls();
 
     let builder = if let Some((url, auth)) = proxy {
         let proxy = reqwest::Proxy::all(url.as_str())?;
@@ -141,6 +143,10 @@ fn build_client(
 #[tokio::main]
 async fn main() -> color_eyre::Result<()> {
     dotenv::dotenv().ok();
+
+    rustls::crypto::ring::default_provider()
+        .install_default()
+        .expect("No provider has been installed");
 
     let config = Config::build()?;
 
