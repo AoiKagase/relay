@@ -546,7 +546,7 @@ dependencies = [
 [[package]]
 name = "background-jobs"
 version = "0.20.0"
-source = "git+https://git.asonix.dog/asonix/background-jobs#4aae15a848f3174b6ab47071a84c460d824a49d0"
+source = "git+https://git.asonix.dog/asonix/background-jobs#a485094f53721f5325c81845eacf9601fe8ba88e"
 dependencies = [
  "background-jobs-core",
  "background-jobs-metrics",
@@ -556,13 +556,12 @@ dependencies = [
 [[package]]
 name = "background-jobs-core"
 version = "0.20.0"
-source = "git+https://git.asonix.dog/asonix/background-jobs#4aae15a848f3174b6ab47071a84c460d824a49d0"
+source = "git+https://git.asonix.dog/asonix/background-jobs#a485094f53721f5325c81845eacf9601fe8ba88e"
 dependencies = [
  "event-listener",
  "metrics",
  "serde",
  "serde_json",
- "thiserror 2.0.17",
  "time",
  "tracing",
  "uuid",
@@ -571,9 +570,8 @@ dependencies = [
 [[package]]
 name = "background-jobs-metrics"
 version = "0.20.0"
-source = "git+https://git.asonix.dog/asonix/background-jobs#4aae15a848f3174b6ab47071a84c460d824a49d0"
+source = "git+https://git.asonix.dog/asonix/background-jobs#a485094f53721f5325c81845eacf9601fe8ba88e"
 dependencies = [
- "async-trait",
  "background-jobs-core",
  "metrics",
  "metrics-util",
@@ -584,9 +582,8 @@ dependencies = [
 [[package]]
 name = "background-jobs-tokio"
 version = "0.20.0"
-source = "git+https://git.asonix.dog/asonix/background-jobs#4aae15a848f3174b6ab47071a84c460d824a49d0"
+source = "git+https://git.asonix.dog/asonix/background-jobs#a485094f53721f5325c81845eacf9601fe8ba88e"
 dependencies = [
- "async-trait",
  "background-jobs-core",
  "metrics",
  "serde",
@@ -644,9 +641,9 @@ dependencies = [
 
 [[package]]
 name = "base64ct"
-version = "1.8.2"
+version = "1.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d809780667f4410e7c41b07f52439b94d2bdf8528eeedc287fa38d3b7f95d82"
+checksum = "2af50177e190e07a26ab74f8b1efbfe2ef87da2116221318cb1c2e82baf7de06"
 
 [[package]]
 name = "bcrypt"
@@ -1481,9 +1478,9 @@ checksum = "f449e6c6c08c865631d4890cfacf252b3d396c9bcc83adb6623cdb02a8336c41"
 
 [[package]]
 name = "flate2"
-version = "1.1.5"
+version = "1.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfe33edd8e85a12a67454e37f8c75e730830d83e313556ab9ebf9ee7fbeb3bfb"
+checksum = "b375d6465b98090a5f25b1c7703f3859783755aa9a80433b36e0379a3ec2f369"
 dependencies = [
  "crc32fast",
  "miniz_oxide",
@@ -3735,7 +3732,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6db2770f06117d490610c7488547d543617b21bfa07796d7a12f6f1bd53850d1"
 dependencies = [
  "rand_chacha 0.9.0",
- "rand_core 0.9.3",
+ "rand_core 0.9.4",
 ]
 
 [[package]]
@@ -3755,7 +3752,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3022b5f1df60f26e1ffddd6c66e8aa15de382ae63b3a0c1bfc0e4d3e3f325cb"
 dependencies = [
  "ppv-lite86",
- "rand_core 0.9.3",
+ "rand_core 0.9.4",
 ]
 
 [[package]]
@@ -3769,9 +3766,9 @@ dependencies = [
 
 [[package]]
 name = "rand_core"
-version = "0.9.3"
+version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99d9a13982dcf210057a8a78572b2217b667c3beacbf3a0d8b454f6f82837d38"
+checksum = "4f1b3bc831f92381018fd9c6350b917c7b21f1eed35a65a51900e0e55a3d7afa"
 dependencies = [
  "getrandom 0.3.4",
 ]
@@ -3782,7 +3779,7 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f703f4665700daf5512dcca5f43afa6af89f09db47fb56be587f80636bda2d41"
 dependencies = [
- "rand_core 0.9.3",
+ "rand_core 0.9.4",
 ]
 
 [[package]]
@@ -5062,9 +5059,9 @@ dependencies = [
 
 [[package]]
 name = "tower"
-version = "0.5.2"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d039ad9159c98b70ecfd540b2573b97f7f52c3e8d9f8ad57a24b916a536975f9"
+checksum = "ebe5ef63511595f1344e2d5cfa636d973292adc0eec1f0ad45fae9f0851ab1d4"
 dependencies = [
  "futures-core",
  "futures-util",
@@ -5188,16 +5185,13 @@ dependencies = [
 
 [[package]]
 name = "tracing-opentelemetry"
-version = "0.32.0"
+version = "0.32.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e6e5658463dd88089aba75c7791e1d3120633b1bfde22478b28f625a9bb1b8e"
+checksum = "1ac28f2d093c6c477eaa76b23525478f38de514fa9aeb1285738d4b97a9552fc"
 dependencies = [
  "js-sys",
  "opentelemetry",
- "opentelemetry_sdk",
- "rustversion",
  "smallvec",
- "thiserror 2.0.17",
  "tracing",
  "tracing-core",
  "tracing-log",
