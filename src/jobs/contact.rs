@@ -1,7 +1,6 @@
 use crate::{
     apub::AcceptedActors,
     error::{Error, ErrorKind},
-    future::BoxFuture,
     jobs::JobState,
     requests::BreakerStrategy,
 };
@@ -30,8 +29,33 @@ impl QueryContact {
             contact_id,
         }
     }
+}
 
-    async fn perform(self, state: JobState) -> Result<(), Error> {
+fn to_contact(contact: AcceptedActors) -> Option<(String, String, IriString, IriString)> {
+    let username = contact.preferred_username()?.to_owned();
+    let display_name = contact.name()?.as_one()?.as_xsd_string()?.to_owned();
+
+    let url = contact.url()?.as_single_id()?.to_owned();
+    let any_base = contact.icon()?.as_one()?;
+
+    let avatar = Image::from_any_base(any_base.clone())
+        .ok()??
+        .url()?
+        .as_single_id()?
+        .to_owned();
+
+    Some((username, display_name, url, avatar))
+}
+
+impl Job for QueryContact {
+    type State = JobState;
+    type Error = Error;
+
+    const NAME: &'static str = "relay::jobs::QueryContact";
+    const QUEUE: &'static str = "maintenance";
+
+    #[tracing::instrument(name = "QueryContact", skip(state))]
+    async fn run(self, state: Self::State) -> Result<(), Self::Error> {
         let contact_outdated = state
             .state
             .node_cache
@@ -66,35 +90,6 @@ impl QueryContact {
             .await?;
 
         Ok(())
-    }
-}
-
-fn to_contact(contact: AcceptedActors) -> Option<(String, String, IriString, IriString)> {
-    let username = contact.preferred_username()?.to_owned();
-    let display_name = contact.name()?.as_one()?.as_xsd_string()?.to_owned();
-
-    let url = contact.url()?.as_single_id()?.to_owned();
-    let any_base = contact.icon()?.as_one()?;
-
-    let avatar = Image::from_any_base(any_base.clone())
-        .ok()??
-        .url()?
-        .as_single_id()?
-        .to_owned();
-
-    Some((username, display_name, url, avatar))
-}
-
-impl Job for QueryContact {
-    type State = JobState;
-    type Error = Error;
-    type Future = BoxFuture<'static, Result<(), Self::Error>>;
-
-    const NAME: &'static str = "relay::jobs::QueryContact";
-    const QUEUE: &'static str = "maintenance";
-
-    fn run(self, state: Self::State) -> Self::Future {
-        Box::pin(self.perform(state))
     }
 }
 

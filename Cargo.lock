@@ -469,8 +469,9 @@ checksum = "7d902e3d592a523def97af8f317b08ce16b7ab854c1985a0c671e6f15cebc236"
 
 [[package]]
 name = "async-cpupool"
-version = "0.3.0"
-source = "git+https://git.asonix.dog/safe-async/async-cpupool#6eba93344f7d27e9112ce9d448339329d5ee4823"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "112a5446df25dfb4e3b8e337bce1ef84dbad7f504831900147a8d815e5db9ff2"
 dependencies = [
  "loom",
  "metrics",
@@ -546,7 +547,8 @@ dependencies = [
 [[package]]
 name = "background-jobs"
 version = "0.20.0"
-source = "git+https://git.asonix.dog/asonix/background-jobs#a485094f53721f5325c81845eacf9601fe8ba88e"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f9310d3a03c5137ba90785d7055d1c7336fa7e282edc045f74802ce8dca25ce"
 dependencies = [
  "background-jobs-core",
  "background-jobs-metrics",
@@ -556,7 +558,8 @@ dependencies = [
 [[package]]
 name = "background-jobs-core"
 version = "0.20.0"
-source = "git+https://git.asonix.dog/asonix/background-jobs#a485094f53721f5325c81845eacf9601fe8ba88e"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "91bf8448c2e96d4ab3274a997f5608f721bc55ee367da241aecbc3f582baa2ce"
 dependencies = [
  "event-listener",
  "metrics",
@@ -570,7 +573,8 @@ dependencies = [
 [[package]]
 name = "background-jobs-metrics"
 version = "0.20.0"
-source = "git+https://git.asonix.dog/asonix/background-jobs#a485094f53721f5325c81845eacf9601fe8ba88e"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "83548bcd6b637124a546733275867edecb924e193098beba9127308cfd1730e8"
 dependencies = [
  "background-jobs-core",
  "metrics",
@@ -582,7 +586,8 @@ dependencies = [
 [[package]]
 name = "background-jobs-tokio"
 version = "0.20.0"
-source = "git+https://git.asonix.dog/asonix/background-jobs#a485094f53721f5325c81845eacf9601fe8ba88e"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "299af5b6b8d3765ea817127cae5d6ede70e1782f1d7d8383556769232c8559b7"
 dependencies = [
  "background-jobs-core",
  "metrics",
@@ -1860,15 +1865,17 @@ dependencies = [
 [[package]]
 name = "http-signature-normalization"
 version = "0.7.0"
-source = "git+https://git.asonix.dog/asonix/http-signature-normalization#a63116b5e9b44cb32250a461e2c01b9425ce329e"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b95e3149194de5f3f9d5225bcc6a8677979f8ff8ce39c85654730ad4824f101e"
 dependencies = [
  "httpdate",
 ]
 
 [[package]]
 name = "http-signature-normalization-actix"
-version = "0.11.1"
-source = "git+https://git.asonix.dog/asonix/http-signature-normalization#a63116b5e9b44cb32250a461e2c01b9425ce329e"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "48181605a7d31266b2cd1e3136a5f33484070091842f8e5481fdc9c33fd57127"
 dependencies = [
  "actix-http",
  "actix-rt",
@@ -1886,8 +1893,9 @@ dependencies = [
 
 [[package]]
 name = "http-signature-normalization-reqwest"
-version = "0.14.0"
-source = "git+https://git.asonix.dog/asonix/http-signature-normalization#a63116b5e9b44cb32250a461e2c01b9425ce329e"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7b2441a67ea8984d46c95099b4a9be83dc5bed2c254b8443dc2554edaeaa7d0b"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -4072,8 +4080,9 @@ dependencies = [
 
 [[package]]
 name = "rsa-magic-public-key"
-version = "0.8.0"
-source = "git+https://git.asonix.dog/asonix/rsa-magic-public-key#463118047149d4ac2886a48724562e335592e31e"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fee85f0f8438c6fe9a42d203cafc1880b5e6edf87b581a08b3663567e6f495db"
 dependencies = [
  "base64 0.22.1",
  "num-bigint-dig",
@@ -5113,9 +5122,9 @@ dependencies = [
 
 [[package]]
 name = "tracing-actix-web"
-version = "0.7.20"
+version = "0.7.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2f28f45dd524790b44a7b372f7c3aec04a3af6b42d494e861b67de654cb25a5e"
+checksum = "1ca6b15407f9bfcb35f82d0e79e603e1629ece4e91cc6d9e58f890c184dd20af"
 dependencies = [
  "actix-web",
  "mutually_exclusive_features",

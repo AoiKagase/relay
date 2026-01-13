@@ -28,7 +28,7 @@ actix-web = { version = "4.4.0", default-features = false, features = ["compress
 activitystreams = "0.7.0-alpha.25"
 activitystreams-ext = "0.1.0-alpha.3"
 ammonia = "4.0.0"
-async-cpupool = { version = "0.3.0", git = "https://git.asonix.dog/safe-async/async-cpupool" }
+async-cpupool = "0.4.0"
 bcrypt = "0.18"
 base64 = "0.22"
 clap = { version = "4.0.0", features = ["derive"] }
@@ -58,7 +58,7 @@ reqwest-middleware = { version = "0.5", default-features = false, features = ["j
 reqwest-tracing = "0.6.0"
 ring = "0.17.5"
 rsa = "0.9"
-rsa-magic-public-key = { version = "0.8.0", git = "https://git.asonix.dog/asonix/rsa-magic-public-key" }
+rsa-magic-public-key = "0.8.1"
 rustls = { version = "0.23.0", default-features = false, features = ["ring", "logging", "std", "tls12"] }
 rustls-channel-resolver = "0.3.0"
 rustls-pemfile = "2"
@@ -74,6 +74,7 @@ teloxide = { version = "0.17.0", default-features = false, features = [
 thiserror = "2.0"
 time = { version = "0.3.17", features = ["serde"] }
 tracing = "0.1"
+tracing-actix-web = "0.7.21"
 tracing-error = "0.2"
 tracing-log = "0.2"
 tracing-opentelemetry = "0.32"
@@ -90,22 +91,16 @@ uuid = { version = "1", features = ["v4", "serde"] }
 version = "0.20.0"
 default-features = false
 features = ["error-logging", "metrics", "tokio"]
-git = "https://git.asonix.dog/asonix/background-jobs"
 
 [dependencies.http-signature-normalization-actix]
-version = "0.11.1"
+version = "0.11.2"
 default-features = false
 features = ["server", "ring"]
-git = "https://git.asonix.dog/asonix/http-signature-normalization"
 
 [dependencies.http-signature-normalization-reqwest]
-version = "0.14.0"
+version = "0.14.1"
 default-features = false
 features = ["middleware", "ring"]
-git = "https://git.asonix.dog/asonix/http-signature-normalization"
-
-[dependencies.tracing-actix-web]
-version = "0.7.9"
 
 [build-dependencies]
 color-eyre = "0.6.2"

@@ -3,7 +3,6 @@ use crate::{
     config::UrlKind,
     db::Actor,
     error::Error,
-    future::BoxFuture,
     jobs::{apub::generate_undo_follow, Deliver, JobState},
 };
 use activitystreams::prelude::BaseExt;
@@ -28,9 +27,17 @@ impl Undo {
     pub(crate) fn new(input: AcceptedActivities, actor: Actor) -> Self {
         Undo { input, actor }
     }
+}
+
+impl Job for Undo {
+    type State = JobState;
+    type Error = Error;
+
+    const NAME: &'static str = "relay::jobs::apub::Undo";
+    const QUEUE: &'static str = "apub";
 
     #[tracing::instrument(name = "Undo", skip(state))]
-    async fn perform(self, state: JobState) -> Result<(), Error> {
+    async fn run(self, state: Self::State) -> Result<(), Self::Error> {
         let was_following = state.state.db.is_connected(self.actor.id.clone()).await?;
 
         state.actors.remove_connection(&self.actor).await?;
@@ -45,18 +52,5 @@ impl Undo {
         }
 
         Ok(())
-    }
-}
-
-impl Job for Undo {
-    type State = JobState;
-    type Error = Error;
-    type Future = BoxFuture<'static, Result<(), Self::Error>>;
-
-    const NAME: &'static str = "relay::jobs::apub::Undo";
-    const QUEUE: &'static str = "apub";
-
-    fn run(self, state: Self::State) -> Self::Future {
-        Box::pin(self.perform(state))
     }
 }

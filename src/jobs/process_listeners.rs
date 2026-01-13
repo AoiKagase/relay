@@ -1,6 +1,5 @@
 use crate::{
     error::Error,
-    future::BoxFuture,
     jobs::{instance::QueryInstance, nodeinfo::QueryNodeinfo, JobState},
 };
 use background_jobs::Job;
@@ -8,9 +7,15 @@ use background_jobs::Job;
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub(crate) struct Listeners;
 
-impl Listeners {
+impl Job for Listeners {
+    type State = JobState;
+    type Error = Error;
+
+    const NAME: &'static str = "relay::jobs::Listeners";
+    const QUEUE: &'static str = "maintenance";
+
     #[tracing::instrument(name = "Spawn query instances", skip(state))]
-    async fn perform(self, state: JobState) -> Result<(), Error> {
+    async fn run(self, state: Self::State) -> Result<(), Self::Error> {
         for actor_id in state.state.db.connected_ids().await? {
             state
                 .job_server
@@ -20,18 +25,5 @@ impl Listeners {
         }
 
         Ok(())
-    }
-}
-
-impl Job for Listeners {
-    type State = JobState;
-    type Error = Error;
-    type Future = BoxFuture<'static, Result<(), Self::Error>>;
-
-    const NAME: &'static str = "relay::jobs::Listeners";
-    const QUEUE: &'static str = "maintenance";
-
-    fn run(self, state: Self::State) -> Self::Future {
-        Box::pin(self.perform(state))
     }
 }

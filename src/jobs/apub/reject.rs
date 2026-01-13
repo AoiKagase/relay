@@ -2,7 +2,6 @@ use crate::{
     config::UrlKind,
     db::Actor,
     error::Error,
-    future::BoxFuture,
     jobs::{apub::generate_undo_follow, Deliver, JobState},
 };
 use background_jobs::Job;
@@ -16,9 +15,15 @@ impl std::fmt::Debug for Reject {
     }
 }
 
-impl Reject {
+impl Job for Reject {
+    type State = JobState;
+    type Error = Error;
+
+    const NAME: &'static str = "relay::jobs::apub::Reject";
+    const QUEUE: &'static str = "apub";
+
     #[tracing::instrument(name = "Reject", skip(state))]
-    async fn perform(self, state: JobState) -> Result<(), Error> {
+    async fn run(self, state: Self::State) -> Result<(), Self::Error> {
         state.actors.remove_connection(&self.0).await?;
 
         let my_id = state.config.generate_url(UrlKind::Actor);
@@ -30,18 +35,5 @@ impl Reject {
             .await?;
 
         Ok(())
-    }
-}
-
-impl Job for Reject {
-    type State = JobState;
-    type Error = Error;
-    type Future = BoxFuture<'static, Result<(), Self::Error>>;
-
-    const NAME: &'static str = "relay::jobs::apub::Reject";
-    const QUEUE: &'static str = "apub";
-
-    fn run(self, state: Self::State) -> Self::Future {
-        Box::pin(self.perform(state))
     }
 }

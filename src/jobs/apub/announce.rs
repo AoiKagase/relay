@@ -2,7 +2,6 @@ use crate::{
     config::{Config, UrlKind},
     db::Actor,
     error::Error,
-    future::BoxFuture,
     jobs::{
         apub::{get_inboxes, prepare_activity},
         DeliverMany, JobState,
@@ -30,21 +29,6 @@ impl Announce {
     pub fn new(object_id: IriString, actor: Actor) -> Self {
         Announce { object_id, actor }
     }
-
-    #[tracing::instrument(name = "Announce", skip(state))]
-    async fn perform(self, state: JobState) -> Result<(), Error> {
-        let activity_id = state.config.generate_url(UrlKind::Activity);
-
-        let announce = generate_announce(&state.config, &activity_id, &self.object_id)?;
-        let inboxes = get_inboxes(&state.state, &self.actor, &self.object_id).await?;
-        state
-            .job_server
-            .queue(DeliverMany::new(inboxes, announce)?)
-            .await?;
-
-        state.state.cache(self.object_id, activity_id);
-        Ok(())
-    }
 }
 
 // Generate a type that says "Look at this object"
@@ -65,12 +49,22 @@ fn generate_announce(
 impl Job for Announce {
     type State = JobState;
     type Error = Error;
-    type Future = BoxFuture<'static, Result<(), Self::Error>>;
 
     const NAME: &'static str = "relay::jobs::apub::Announce";
     const QUEUE: &'static str = "apub";
 
-    fn run(self, state: Self::State) -> Self::Future {
-        Box::pin(self.perform(state))
+    #[tracing::instrument(name = "Announce", skip(state))]
+    async fn run(self, state: Self::State) -> Result<(), Self::Error> {
+        let activity_id = state.config.generate_url(UrlKind::Activity);
+
+        let announce = generate_announce(&state.config, &activity_id, &self.object_id)?;
+        let inboxes = get_inboxes(&state.state, &self.actor, &self.object_id).await?;
+        state
+            .job_server
+            .queue(DeliverMany::new(inboxes, announce)?)
+            .await?;
+
+        state.state.cache(self.object_id, activity_id);
+        Ok(())
     }
 }

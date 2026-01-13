@@ -1,6 +1,5 @@
 use crate::{
     error::Error,
-    future::BoxFuture,
     jobs::{debug_object, JobState},
     requests::BreakerStrategy,
 };
@@ -33,9 +32,18 @@ impl Deliver {
             data: serde_json::to_value(data)?,
         })
     }
+}
+
+impl Job for Deliver {
+    type State = JobState;
+    type Error = Error;
+
+    const NAME: &'static str = "relay::jobs::Deliver";
+    const QUEUE: &'static str = "deliver";
+    const BACKOFF: Backoff = Backoff::Exponential(8);
 
     #[tracing::instrument(name = "Deliver", skip(state))]
-    async fn perform(self, state: JobState) -> Result<(), Error> {
+    async fn run(self, state: Self::State) -> Result<(), Self::Error> {
         if let Err(e) = state
             .state
             .requests
@@ -53,19 +61,5 @@ impl Deliver {
             return Err(e);
         }
         Ok(())
-    }
-}
-
-impl Job for Deliver {
-    type State = JobState;
-    type Error = Error;
-    type Future = BoxFuture<'static, Result<(), Self::Error>>;
-
-    const NAME: &'static str = "relay::jobs::Deliver";
-    const QUEUE: &'static str = "deliver";
-    const BACKOFF: Backoff = Backoff::Exponential(8);
-
-    fn run(self, state: Self::State) -> Self::Future {
-        Box::pin(self.perform(state))
     }
 }
