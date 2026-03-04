@@ -9,8 +9,6 @@ env:
 jobs:
   clippy:
     runs-on: base-image
-    container:
-      image: docker.io/asonix/actions-base-image:0.1
     steps:
       -
         name: Checkout relay
@@ -25,9 +23,7 @@ jobs:
           cargo clippy --no-default-features
 
   tests:
-    runs-on: docker
-    container:
-      image: docker.io/asonix/actions-base-image:0.1
+    runs-on: base-image
     steps:
       -
         name: Checkout relay
@@ -43,9 +39,7 @@ jobs:
     needs:
       - clippy
       - tests
-    runs-on: docker
-    container:
-      image: docker.io/asonix/actions-base-image:0.1
+    runs-on: base-image
     strategy:
       fail-fast: false
       matrix:
@@ -143,9 +137,7 @@ jobs:
           retention-days: 1
 
   publish-docker:
-    runs-on: docker
-    container:
-      image: docker.io/asonix/actions-base-image:0.1
+    runs-on: base-image
     needs: [build]
     steps:
       -
@@ -194,9 +186,7 @@ jobs:
 
   publish-forgejo:
     needs: [build]
-    runs-on: docker
-    container:
-      image: docker.io/asonix/actions-base-image:0.1
+    runs-on: base-image
     steps:
       - uses: https://github.com/actions/download-artifact@v3
         with:
@@ -211,9 +201,7 @@ jobs:
 
   publish-crate:
     needs: [build]
-    runs-on: docker
-    container:
-      image: docker.io/asonix/actions-base-image:0.1
+    runs-on: base-image
     steps:
       -
         name: Checkout relay
