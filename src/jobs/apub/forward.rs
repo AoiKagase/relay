@@ -2,7 +2,6 @@ use crate::{
     apub::AcceptedActivities,
     db::Actor,
     error::{Error, ErrorKind},
-    future::BoxFuture,
     jobs::{apub::get_inboxes, DeliverMany, JobState},
 };
 use activitystreams::prelude::*;
@@ -27,9 +26,17 @@ impl Forward {
     pub fn new(input: AcceptedActivities, actor: Actor) -> Self {
         Forward { input, actor }
     }
+}
+
+impl Job for Forward {
+    type State = JobState;
+    type Error = Error;
+
+    const NAME: &'static str = "relay::jobs::apub::Forward";
+    const QUEUE: &'static str = "apub";
 
     #[tracing::instrument(name = "Forward", skip(state))]
-    async fn perform(self, state: JobState) -> Result<(), Error> {
+    async fn run(self, state: Self::State) -> Result<(), Self::Error> {
         let object_id = self
             .input
             .object_unchecked()
@@ -44,18 +51,5 @@ impl Forward {
             .await?;
 
         Ok(())
-    }
-}
-
-impl Job for Forward {
-    type State = JobState;
-    type Error = Error;
-    type Future = BoxFuture<'static, Result<(), Self::Error>>;
-
-    const NAME: &'static str = "relay::jobs::apub::Forward";
-    const QUEUE: &'static str = "apub";
-
-    fn run(self, state: Self::State) -> Self::Future {
-        Box::pin(self.perform(state))
     }
 }

@@ -1,7 +1,7 @@
 [package]
 name = "ap-relay"
 description = "A simple activitypub relay"
-version = "0.3.119"
+version = "0.3.121"
 authors = ["asonix <asonix@asonix.dog>"]
 license = "AGPL-3.0"
 readme = "README.md"
@@ -28,24 +28,24 @@ actix-web = { version = "4.4.0", default-features = false, features = ["compress
 activitystreams = "0.7.0-alpha.25"
 activitystreams-ext = "0.1.0-alpha.3"
 ammonia = "4.0.0"
-async-cpupool = "0.3.0"
-bcrypt = "0.17"
+async-cpupool = "0.4.0"
+bcrypt = "0.19"
 base64 = "0.22"
 clap = { version = "4.0.0", features = ["derive"] }
 color-eyre = "0.6.2"
 config = { version = "0.15.0", default-features = false, features = ["toml", "json", "yaml"] }
-console-subscriber = { version = "0.4", optional = true }
+console-subscriber = { version = "0.5", optional = true }
 dashmap = "6.0.1"
 dotenv = "0.15.0"
 futures-core = "0.3.30"
 lru = "0.16.0"
-metrics = "0.23.0"
-metrics-exporter-prometheus = { version = "0.15.0", default-features = false, features = [
+metrics = "0.24.0"
+metrics-exporter-prometheus = { version = "0.18", default-features = false, features = [
   "http-listener",
 ] }
-metrics-util = "0.17.0"
+metrics-util = "0.20.0"
 mime = "0.3.16"
-minify-html = "0.16.0"
+minify-html = "0.18"
 opentelemetry = "0.31.0"
 opentelemetry_sdk = { version = "0.31", features = ["rt-tokio"] }
 opentelemetry-otlp = { version = "0.31", features = ["grpc-tonic"] }
@@ -53,12 +53,12 @@ pin-project-lite = "0.2.9"
 # pinned to metrics-util
 quanta = "0.12.0"
 rand = "0.8"
-reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream"]}
-reqwest-middleware = { version = "0.4", default-features = false, features = ["json"] }
-reqwest-tracing = "0.5.0"
+reqwest = { version = "0.13", default-features = false, features = ["rustls-no-provider", "stream"]}
+reqwest-middleware = { version = "0.5", default-features = false, features = ["json"] }
+reqwest-tracing = "0.7.0"
 ring = "0.17.5"
 rsa = "0.9"
-rsa-magic-public-key = "0.8.0"
+rsa-magic-public-key = "0.8.1"
 rustls = { version = "0.23.0", default-features = false, features = ["ring", "logging", "std", "tls12"] }
 rustls-channel-resolver = "0.3.0"
 rustls-pemfile = "2"
@@ -74,6 +74,7 @@ teloxide = { version = "0.17.0", default-features = false, features = [
 thiserror = "2.0"
 time = { version = "0.3.17", features = ["serde"] }
 tracing = "0.1"
+tracing-actix-web = "0.7.21"
 tracing-error = "0.2"
 tracing-log = "0.2"
 tracing-opentelemetry = "0.32"
@@ -87,22 +88,19 @@ url = { version = "2.5.4", features = ["serde"] }
 uuid = { version = "1", features = ["v4", "serde"] }
 
 [dependencies.background-jobs]
-version = "0.19.0"
+version = "0.20.0"
 default-features = false
 features = ["error-logging", "metrics", "tokio"]
 
 [dependencies.http-signature-normalization-actix]
-version = "0.11.1"
+version = "0.11.2"
 default-features = false
 features = ["server", "ring"]
 
 [dependencies.http-signature-normalization-reqwest]
-version = "0.13.0"
+version = "0.14.1"
 default-features = false
 features = ["middleware", "ring"]
-
-[dependencies.tracing-actix-web]
-version = "0.7.9"
 
 [build-dependencies]
 color-eyre = "0.6.2"

@@ -1,6 +1,5 @@
 use crate::{
     error::{Error, ErrorKind},
-    future::BoxFuture,
     jobs::{Boolish, JobState, QueryContact},
     requests::BreakerStrategy,
 };
@@ -24,9 +23,17 @@ impl QueryNodeinfo {
     pub(crate) fn new(actor_id: IriString) -> Self {
         QueryNodeinfo { actor_id }
     }
+}
+
+impl Job for QueryNodeinfo {
+    type State = JobState;
+    type Error = Error;
+
+    const NAME: &'static str = "relay::jobs::QueryNodeinfo";
+    const QUEUE: &'static str = "maintenance";
 
     #[tracing::instrument(name = "Query node info", skip(state))]
-    async fn perform(self, state: JobState) -> Result<(), Error> {
+    async fn run(self, state: Self::State) -> Result<(), Self::Error> {
         if !state
             .state
             .node_cache
@@ -101,19 +108,6 @@ impl QueryNodeinfo {
         }
 
         Ok(())
-    }
-}
-
-impl Job for QueryNodeinfo {
-    type State = JobState;
-    type Error = Error;
-    type Future = BoxFuture<'static, Result<(), Self::Error>>;
-
-    const NAME: &'static str = "relay::jobs::QueryNodeinfo";
-    const QUEUE: &'static str = "maintenance";
-
-    fn run(self, state: Self::State) -> Self::Future {
-        Box::pin(self.perform(state))
     }
 }
 

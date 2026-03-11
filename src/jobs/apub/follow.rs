@@ -3,7 +3,6 @@ use crate::{
     config::{Config, UrlKind},
     db::Actor,
     error::{Error, ErrorKind},
-    future::BoxFuture,
     jobs::{apub::prepare_activity, Deliver, JobState, QueryInstance, QueryNodeinfo},
 };
 use activitystreams::{
@@ -31,48 +30,6 @@ impl std::fmt::Debug for Follow {
 impl Follow {
     pub fn new(input: AcceptedActivities, actor: Actor) -> Self {
         Follow { input, actor }
-    }
-
-    #[tracing::instrument(name = "Follow", skip(state))]
-    async fn perform(self, state: JobState) -> Result<(), Error> {
-        let my_id = state.config.generate_url(UrlKind::Actor);
-
-        // if following relay directly, not just following 'public', followback
-        if self.input.object_is(&my_id)
-            && !state.state.db.is_connected(self.actor.id.clone()).await?
-        {
-            let follow = generate_follow(&state.config, &self.actor.id, &my_id)?;
-            state
-                .job_server
-                .queue(Deliver::new(self.actor.inbox.clone(), follow)?)
-                .await?;
-        }
-
-        state.actors.add_connection(self.actor.clone()).await?;
-
-        let accept = generate_accept_follow(
-            &state.config,
-            &self.actor.id,
-            self.input.id_unchecked().ok_or(ErrorKind::MissingId)?,
-            &my_id,
-        )?;
-
-        state
-            .job_server
-            .queue(Deliver::new(self.actor.inbox, accept)?)
-            .await?;
-
-        state
-            .job_server
-            .queue(QueryInstance::new(self.actor.id.clone()))
-            .await?;
-
-        state
-            .job_server
-            .queue(QueryNodeinfo::new(self.actor.id))
-            .await?;
-
-        Ok(())
     }
 }
 
@@ -114,12 +71,49 @@ fn generate_accept_follow(
 impl Job for Follow {
     type State = JobState;
     type Error = Error;
-    type Future = BoxFuture<'static, Result<(), Self::Error>>;
 
     const NAME: &'static str = "relay::jobs::apub::Follow";
     const QUEUE: &'static str = "apub";
 
-    fn run(self, state: Self::State) -> Self::Future {
-        Box::pin(self.perform(state))
+    #[tracing::instrument(name = "Follow", skip(state))]
+    async fn run(self, state: Self::State) -> Result<(), Self::Error> {
+        let my_id = state.config.generate_url(UrlKind::Actor);
+
+        // if following relay directly, not just following 'public', followback
+        if self.input.object_is(&my_id)
+            && !state.state.db.is_connected(self.actor.id.clone()).await?
+        {
+            let follow = generate_follow(&state.config, &self.actor.id, &my_id)?;
+            state
+                .job_server
+                .queue(Deliver::new(self.actor.inbox.clone(), follow)?)
+                .await?;
+        }
+
+        state.actors.add_connection(self.actor.clone()).await?;
+
+        let accept = generate_accept_follow(
+            &state.config,
+            &self.actor.id,
+            self.input.id_unchecked().ok_or(ErrorKind::MissingId)?,
+            &my_id,
+        )?;
+
+        state
+            .job_server
+            .queue(Deliver::new(self.actor.inbox, accept)?)
+            .await?;
+
+        state
+            .job_server
+            .queue(QueryInstance::new(self.actor.id.clone()))
+            .await?;
+
+        state
+            .job_server
+            .queue(QueryNodeinfo::new(self.actor.id))
+            .await?;
+
+        Ok(())
     }
 }

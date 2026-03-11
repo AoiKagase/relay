@@ -1,6 +1,5 @@
 use crate::{
     error::Error,
-    future::BoxFuture,
     jobs::{debug_object, Deliver, JobState},
 };
 use activitystreams::iri_string::types::IriString;
@@ -31,9 +30,17 @@ impl DeliverMany {
             data: serde_json::to_value(data)?,
         })
     }
+}
+
+impl Job for DeliverMany {
+    type State = JobState;
+    type Error = Error;
+
+    const NAME: &'static str = "relay::jobs::DeliverMany";
+    const QUEUE: &'static str = "deliver";
 
     #[tracing::instrument(name = "Deliver many", skip(state))]
-    async fn perform(self, state: JobState) -> Result<(), Error> {
+    async fn run(self, state: Self::State) -> Result<(), Self::Error> {
         for inbox in self.to {
             state
                 .job_server
@@ -42,18 +49,5 @@ impl DeliverMany {
         }
 
         Ok(())
-    }
-}
-
-impl Job for DeliverMany {
-    type State = JobState;
-    type Error = Error;
-    type Future = BoxFuture<'static, Result<(), Self::Error>>;
-
-    const NAME: &'static str = "relay::jobs::DeliverMany";
-    const QUEUE: &'static str = "deliver";
-
-    fn run(self, state: Self::State) -> Self::Future {
-        Box::pin(self.perform(state))
     }
 }

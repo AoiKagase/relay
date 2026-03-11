@@ -8,9 +8,7 @@ on:
 
 jobs:
   clippy:
-    runs-on: docker
-    container:
-      image: docker.io/asonix/actions-base-image:0.1
+    runs-on: base-image
     steps:
       -
         name: Checkout relay
@@ -24,9 +22,7 @@ jobs:
           cargo clippy --no-default-features -- -D warnings
 
   tests:
-    runs-on: docker
-    container:
-      image: docker.io/asonix/actions-base-image:0.1
+    runs-on: base-image
     steps:
       -
         name: Checkout relay
@@ -46,9 +42,7 @@ jobs:
           - x86_64-unknown-linux-musl
           - armv7-unknown-linux-musleabihf
           - aarch64-unknown-linux-musl
-    runs-on: docker
-    container:
-      image: docker.io/asonix/actions-base-image:0.1
+    runs-on: base-image
     steps:
       -
         name: Checkout relay

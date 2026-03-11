@@ -21,7 +21,7 @@ use crate::{
 use background_jobs::{
     memory_storage::{Storage, TokioTimer},
     metrics::MetricsStorage,
-    tokio::{QueueHandle, WorkerConfig},
+    tokio::{JobQueue, WorkerConfig},
     Job,
 };
 use std::time::Duration;
@@ -96,13 +96,13 @@ pub(crate) struct JobState {
 
 #[derive(Clone)]
 pub(crate) struct JobServer {
-    remote: QueueHandle,
+    remote: JobQueue,
 }
 
 impl std::fmt::Debug for JobServer {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("JobServer")
-            .field("queue_handle", &"QueueHandle")
+            .field("queue_handle", &"JobQueue")
             .finish()
     }
 }
@@ -126,7 +126,7 @@ impl JobState {
 }
 
 impl JobServer {
-    fn new(remote_handle: QueueHandle) -> Self {
+    fn new(remote_handle: JobQueue) -> Self {
         JobServer {
             remote: remote_handle,
         }
@@ -137,7 +137,7 @@ impl JobServer {
         J: Job,
     {
         self.remote
-            .queue(job)
+            .push(job)
             .await
             .map_err(ErrorKind::Queue)
             .map_err(Into::into)

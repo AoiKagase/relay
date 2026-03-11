@@ -1,7 +1,6 @@
 use crate::{
     config::UrlKind,
     error::{Error, ErrorKind},
-    future::BoxFuture,
     jobs::{Boolish, JobState},
     requests::BreakerStrategy,
 };
@@ -63,9 +62,17 @@ impl QueryInstance {
             }
         }
     }
+}
+
+impl Job for QueryInstance {
+    type State = JobState;
+    type Error = Error;
+
+    const NAME: &'static str = "relay::jobs::QueryInstance";
+    const QUEUE: &'static str = "maintenance";
 
     #[tracing::instrument(name = "Query instance", skip(state))]
-    async fn perform(self, state: JobState) -> Result<(), Error> {
+    async fn run(self, state: Self::State) -> Result<(), Self::Error> {
         let contact_outdated = state
             .state
             .node_cache
@@ -166,19 +173,6 @@ impl QueryInstance {
             .await?;
 
         Ok(())
-    }
-}
-
-impl Job for QueryInstance {
-    type State = JobState;
-    type Error = Error;
-    type Future = BoxFuture<'static, Result<(), Self::Error>>;
-
-    const NAME: &'static str = "relay::jobs::QueryInstance";
-    const QUEUE: &'static str = "maintenance";
-
-    fn run(self, state: Self::State) -> Self::Future {
-        Box::pin(self.perform(state))
     }
 }
 
